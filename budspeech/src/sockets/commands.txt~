@@ -1,3 +1,0 @@
-scp -r /home/simon/ROS/src/budspeech/src/sockets/www root@scp -r /home/simon/ROS/src/budspeech/src/sockets/www root@192.168.178.43:/
-
-pw: p9z34c
