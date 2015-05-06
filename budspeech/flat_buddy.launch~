@@ -1,0 +1,10 @@
+<launch>
+<node pkg="sound_play" type="sound_play" name="soundplay_node.py" 
+output="none"/>
+<node pkg="budspeech" type="budspeech" name="NL_processor.py" 
+output="screen"/>
+<node pkg="budspeech" type="budspeech" name="control.py" 
+output="screen"/>
+<node pkg="budspeech" type="budspeech" name="recognize.py" 
+output="none"/>
+</launch>

@@ -1,0 +1,11 @@
+<html>
+	<head>
+		<title> Socket Number 1 </title>
+	</head>
+
+	<body>
+	<a href=cgi-bin/turn.cgi?on">ON</a> </ br>
+	<a href=cgi-bin/turn.cgi?on">OFF</a> </ br>
+	<a href=cgi-bin/turn.cgi?state">STATE</a> </ br>
+	</body>
+</html>

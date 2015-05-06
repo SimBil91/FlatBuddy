@@ -1,0 +1,4 @@
+<launch>
+<node name="recognition" pkg="budspeech" type="recognition.py" output="log" />
+<node name="NL_processor" pkg="budspeech" type="NL_processor.py" output="screen"/>
+</launch>

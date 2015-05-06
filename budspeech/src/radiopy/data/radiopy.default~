@@ -1,0 +1,140 @@
+# [Vaughan Radio]
+# home: http://www.vaughanradio.com/
+# stream: http://vaughanradio.streaming-pro.com:8012/listen.pls
+
+[Loca FM]
+home: http://www.locafm.com
+stream: http://audio-online.net:23500/listen.pls
+
+#[RTVE Radio Cĺásica]
+#home: http://www.rtve.es/radio/radioclasica/
+#stream: http://radioclasica.rtve.stream.flumotion.com/rtve/radioclasica.mp3.m3u
+
+[Horizon FM Tenerife and Canaries]
+home: http://www.horizon.fm
+stream: http://uk1.internet-radio.com:15614/listen.pls
+
+[Cadena SER Madrid]
+home: http://www.cadenaser.com
+stream: http://4123.live.streamtheworld.com:443/CADENASER_SC
+
+# [Rock FM Nesodden]
+# home: http://www.rockfm.no
+# stream: http://83.143.85.115:7800/listen.pls
+
+[Rocky FM]
+home: http://www.rocky.fm
+stream: http://www.rockyfm.com/listen.pls
+
+[Country 108]
+home: http://www.country108.com
+stream: http://www.country108.com/listen.pls
+
+[City Music]
+home: http://www.citymusic.be
+stream: http://shoutcast01.edpnet.net:10150/listen.pls
+
+[Alpha Radio Belarus]
+home: http://www.alpha.by
+stream: http://86.57.151.4:8009/listen.pls
+
+#[Jazz FM London]
+#home: http://www.jazzfm.com
+#stream: http://listen.onmyradio.net:8002/listen.pls
+
+[JazzRadio Budapest]
+home: www.jazzradio.hu
+stream: http://194.38.105.21:8002/listen.pls
+
+[MFM Paris]
+home: http://www.mfm.fr
+stream: http://mfm.ice.infomaniak.ch/playlists/mfm-128.mp3.m3u
+
+[Radio Center Love]
+home: http://www.radiocenter.si
+stream: http://212.18.63.51:8060/listen.pls
+
+[M2 80 France]
+home: http://www.m2radio.fr
+stream: http://www.m2radio.fr/pls/m280.m3u
+
+[M2 90 France]
+home: http://www.m2radio.fr
+stream: http://www.m2radio.fr/pls/m290.m3u
+
+[RMC 90]
+home: http://www.shoutcast.com
+stream: http://shoutcast.unitedradio.it:1403/listen.pls
+
+[RMC 80]
+home: http://www.shoutcast.com
+stream: http://shoutcast.unitedradio.it:1401/listen.pls
+
+# [RMC 2]
+# home: http://www.shoutcast.com
+# stream: http://shoutcast.unitedradio.it:1107/listen.pls
+
+[ChilliZET]
+home: http://www.chillizet.pl
+stream: http://chicov-01.cdn.eurozet.pl:8102
+
+#[Radio Andra]
+#home: http://www.radioandra.se
+#stream: http://198.105.220.12:9472/Live
+
+#[97.7 Manchester]
+#home:
+#stream: http://media-ice.musicradio.com/XFMManchesterMP3
+
+#[Radio Exterior de España]
+#home: http://www.rtve.es
+#stream: http://radioexterior.rtve.stream.flumotion.com/rtve/radioexterior.mp3.m3u
+
+#[BBC World Service]
+#home: http://bbcworldservice.com/
+#stream: mms://livewmstream-ws.bbc.co.uk.edgestreams.net/reflector:43021
+
+#[BBC World Service News]
+#home: http://bbcworldservice.com/
+#stream: http://www.bbc.co.uk/worldservice/meta/tx/nb/live/ennws.pls
+
+[RFI Afrique]
+home: http://www.rfi.fr
+stream: http://www.tv-radio.com/station/rfiafrique-mp3/rfiafrique-mp3-64k.pls
+
+[Luxfunk Radio]
+home: www.luxfunkradio.com
+stream: http://live.luxfunkradio.com:8200/listen.pls
+
+[105HipHop]
+home: http://www.shoutcast.com
+stream: http://shoutcast.unitedradio.it:1113/listen.pls
+
+#[The Voice 105.9]
+#home:
+#stream: mms://qstream-live.qbrick.com/03872_TheVoice_Mid
+
+[LSRfm.com]
+home: http://www.lsrfm.com
+stream: http://lush.wavestreamer.com:6648/
+
+#[Radio Student 100.5 FM Zagreb, Croatia]
+#home: http://www.radiostudent.fpzg.hr
+#stream: http://www.radiostudent.hr/AAC128.pls
+
+[CampusFM Essen Germany]
+home: http://www.campusfm.info
+stream: http://132.252.179.253:8000/listen.pls
+
+[SWR3 Radio]
+home: http://www.swr3.de
+stream: http://mp3-live.swr3.de/swr3_m.pls
+
+[Radio 7]
+home: http://radio7.de
+stream: http://srv01.radio7.fmstreams.de/stream1/livestream.mp3.m3u
+
+[1 Live Diggi]
+home:
+stream: http://www.wdr.de/wdrlive/media/mp3/1live-diggi.m3u
+
