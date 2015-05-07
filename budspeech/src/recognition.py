@@ -36,6 +36,7 @@ def callback(recognizer, audio):                          # this is called from 
             result = recognizer.recognize(audio, True)
             pub.publish(str(result[0]))
             rospy.loginfo(result) 
+            print(recognizer.energy_threshold )
         else:
             print('Recognition disabled')
     except:
