@@ -1,4 +1,5 @@
 # FlatBuddy
+## Alpha Status! 
 HOME AUTOMATION System based on open source software and low cost hardware.
 
 Prerequesites:
