@@ -86,27 +86,27 @@ def pre_parse(token):
     else:
         return -1
 def find_objects(what,column,string):
-    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+    db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
-    cursor.execute("SELECT %s FROM objects WHERE %s = ?" % (what,column), (string,))
+    cursor.execute("SELECT %s FROM objects WHERE %s = %s" ,(what,column,string,))
     all_rows = cursor.fetchall() 
     # close DB
     db.close()   
     return all_rows
 
 def find_objects_id(what,column,ids):
-    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+    db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
-    cursor.execute("SELECT %s FROM objects WHERE %s IN (%s)" % (what,column,', '.join(map(str, ids))))
+    cursor.execute("SELECT %s FROM objects WHERE %s IN (%s)" , (what,column,', '.join(map(str, ids))))
     all_rows = cursor.fetchall() 
     # close DB
     db.close()   
     return all_rows
 
 def find_mods(what,column,string):
-    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+    db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
-    cursor.execute("SELECT %s FROM mods WHERE %s = ?" % (what,column), (string,))
+    cursor.execute("SELECT %s FROM mods WHERE %s = %s" , (what,column,string,))
     all_rows = cursor.fetchall() 
     # close DB
     db.close()   
@@ -175,9 +175,9 @@ def check_keys(token,keys):
 def read_poss_tasks():
     # collects all possible tasks on objects
     #connect to DB
-    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+    db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
-    cursor.execute("SELECT mod FROM mods")
+    cursor.execute("SELECT modification FROM mods")
     all_rows = cursor.fetchall() 
     all_rows_nt=[]
     for row in all_rows:
@@ -193,7 +193,7 @@ def handle_input(tagged,token):
     # Mandatory: What kind of TASK? (Verb), optional: WHAT, WHERE, WHEN? # asks back if necessary but missing
     # check if there is an modifiable object mentioned and a possible task
     #connect to DB
-    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+    db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
     global aw_response
     global num_response
@@ -207,7 +207,7 @@ def handle_input(tagged,token):
         # check if there is mentioned an object which supports this task
         for task in tasks_found:   
             # generate possible object names:  
-            obj_id_poss=list(sum(find_mods('objectID', 'mod',task), ()))
+            obj_id_poss=list(sum(find_mods('objectID', 'modification',task), ()))
             obj_poss=list(set(list(sum(find_objects_id('type','id',obj_id_poss), ()))))
             obj_poss_pl=[object+'s' for object in obj_poss]
             obj_found=check_keys(token,obj_poss+obj_poss_pl)
@@ -221,7 +221,7 @@ def handle_input(tagged,token):
                         object=object[:-1]
                     # modify all objects if plural and 'all' is said
                     if obj_pl and 'all' in token:
-                        cursor.execute("SELECT id FROM objects WHERE id IN (%s) AND type = ?" % (', '.join(map(str, obj_id_poss),),),(object,))
+                        cursor.execute("SELECT id FROM objects WHERE id IN (%s) AND type = %s" % (', '.join(map(str, obj_id_poss),),),(object,))
                         ids=list(sum(cursor.fetchall(), ())) 
                         result=perform_mod(token,object,ids,task)
                         if result==-1:
@@ -229,11 +229,11 @@ def handle_input(tagged,token):
                         elif result==0:
                             speak('I couldn\'t '+task+' all of the '+object_name) 
                     else:
-                        cursor.execute("SELECT room,location,how FROM objects WHERE id IN (%s) AND type = ?" % (', '.join(map(str, obj_id_poss),),),(object,))
+                        cursor.execute("SELECT room,location,how FROM objects WHERE id IN (%s) AND type = %s" % (', '.join(map(str, obj_id_poss),),),(object,))
                         comb_poss=cursor.fetchall()  # generate from object list
                         if len(comb_poss)==1:
                             #Only one object found
-                            cursor.execute("SELECT id FROM objects WHERE id IN (%s) AND type = ?" % (', '.join(map(str, obj_id_poss),),),(object,))
+                            cursor.execute("SELECT id FROM objects WHERE id IN (%s) AND type = %s" % (', '.join(map(str, obj_id_poss),),),(object,))
                             id=list(sum(cursor.fetchall(), ())) 
                             result=perform_mod(token,object,id,task)
                             if result==-1:
@@ -264,7 +264,7 @@ def handle_input(tagged,token):
                                     query=query+" AND how IN (%s)"
                                     query_var.append(', '.join(map(str, ['\''+how+'\'' for how in how_found]),))
                                     aw_response=aw_response + ' ' + ' '.join(map(str, how_found))
-                                query=query+" AND type = ?"
+                                query=query+" AND type = %s"
                                 cursor.execute(query % tuple(query_var),(object,))
                                 id=list(sum(cursor.fetchall(), ())) 
                                 if obj_pl==1 or len(id)==1:
@@ -593,7 +593,7 @@ def flash_light(objectIDs,delay,iterations):
     return result
 def switch_power(on_off):
     #switches power on_off, returns to previous state
-    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+    db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
     cursor.execute("SELECT id,IP,state FROM sockets")
     IP=cursor.fetchall()  # generate from object list
@@ -610,7 +610,7 @@ def switch_power(on_off):
                 state=urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?state').read()
                 if int(state)==1:
                     urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?off')
-                cursor.execute("UPDATE sockets SET state = ? WHERE id = ?", (int(state),ip[0],))
+                cursor.execute("UPDATE sockets SET state = %s WHERE id = %s", (int(state),ip[0],))
                 POWER=0
             except:
                 print('cannot switch the power off')
@@ -618,12 +618,12 @@ def switch_power(on_off):
     db.close() 
 def turn_on_off(objectIDs, on_off):
     #switch state of socket
-    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+    db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
     result=-1
     error=0
     for objectID in objectIDs:
-        cursor.execute("SELECT IP FROM sockets WHERE objectID = ?",(objectID,))
+        cursor.execute("SELECT IP FROM sockets WHERE objectID = %s",(objectID,))
         IP=list(sum(cursor.fetchall(), ()))  # generate from object list
         try:
             if on_off=='on':
