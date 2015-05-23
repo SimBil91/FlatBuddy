@@ -6,7 +6,7 @@
 
 import rospy
 import nltk
-import sqlite3
+import MySQLdb
 import urllib2
 import rospkg
 import radiopy
@@ -15,6 +15,7 @@ import os
 import pywapi
 import random
 import wolframalpha
+import yaml
 #from nltk.corpus import wordnet as wn
 from std_msgs.msg import String
 from std_srvs.srv import Empty
@@ -29,6 +30,30 @@ radio=radiopy.Player()
 radio_pid=-1
 POWER=1
 client = wolframalpha.Client('ETRTW6-QUVU77J24J')
+
+def load_yaml():
+    with open('master.yml', 'r') as readfile:
+        data=yaml.load(readfile)
+        try:
+            return [data['IP'],data['usr'],data['pwd']]
+        except:
+            return ['','','']
+
+[master_IP,master_usr,master_pwd]=load_yaml()
+
+def connect_to_master():
+    #try to open database connection and look for users
+    try: 
+        db = MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("SELECT type FROM objects")
+        db.commit();
+        db.close();
+        return 1
+    except MySQLdb.OperationalError as err:
+        print('Could not connect to server! Error code '+err[0])
+        return 0
+    
 def pre_parse(token):
     global aw_response
     global num_response
@@ -61,7 +86,7 @@ def pre_parse(token):
     else:
         return -1
 def find_objects(what,column,string):
-    db=sqlite3.connect(path+'/src/budspeech.db')
+    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
     cursor = db.cursor()
     cursor.execute("SELECT %s FROM objects WHERE %s = ?" % (what,column), (string,))
     all_rows = cursor.fetchall() 
@@ -70,7 +95,7 @@ def find_objects(what,column,string):
     return all_rows
 
 def find_objects_id(what,column,ids):
-    db=sqlite3.connect(path+'/src/budspeech.db')
+    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
     cursor = db.cursor()
     cursor.execute("SELECT %s FROM objects WHERE %s IN (%s)" % (what,column,', '.join(map(str, ids))))
     all_rows = cursor.fetchall() 
@@ -79,7 +104,7 @@ def find_objects_id(what,column,ids):
     return all_rows
 
 def find_mods(what,column,string):
-    db=sqlite3.connect(path+'/src/budspeech.db')
+    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
     cursor = db.cursor()
     cursor.execute("SELECT %s FROM mods WHERE %s = ?" % (what,column), (string,))
     all_rows = cursor.fetchall() 
@@ -150,7 +175,7 @@ def check_keys(token,keys):
 def read_poss_tasks():
     # collects all possible tasks on objects
     #connect to DB
-    db=sqlite3.connect(path+'/src/budspeech.db')
+    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
     cursor = db.cursor()
     cursor.execute("SELECT mod FROM mods")
     all_rows = cursor.fetchall() 
@@ -168,7 +193,7 @@ def handle_input(tagged,token):
     # Mandatory: What kind of TASK? (Verb), optional: WHAT, WHERE, WHEN? # asks back if necessary but missing
     # check if there is an modifiable object mentioned and a possible task
     #connect to DB
-    db=sqlite3.connect(path+'/src/budspeech.db')
+    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
     cursor = db.cursor()
     global aw_response
     global num_response
@@ -568,7 +593,7 @@ def flash_light(objectIDs,delay,iterations):
     return result
 def switch_power(on_off):
     #switches power on_off, returns to previous state
-    db=sqlite3.connect(path+'/src/budspeech.db')
+    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
     cursor = db.cursor()
     cursor.execute("SELECT id,IP,state FROM sockets")
     IP=cursor.fetchall()  # generate from object list
@@ -593,7 +618,7 @@ def switch_power(on_off):
     db.close() 
 def turn_on_off(objectIDs, on_off):
     #switch state of socket
-    db=sqlite3.connect(path+'/src/budspeech.db')
+    db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
     cursor = db.cursor()
     result=-1
     error=0
@@ -619,13 +644,15 @@ def turn_on_off(objectIDs, on_off):
     
 if __name__ == '__main__':
     rospy.init_node('NL_processor', anonymous=True)
-    # init music player
-    pygame.mixer.init()
-    # enable recognition
-    enable_rec=rospy.ServiceProxy('enable_recognition', Empty)
-    disable_rec=rospy.ServiceProxy('disable_recognition', Empty)
-    enable_rec()
-    #print(next(gather_information('What is your name').results).text.split('(')[0])
-    # listen to speech topic
-    rospy.Subscriber("speech", String, process_speech)
-    rospy.spin()
+    reached=connect_to_master()
+    if reached:
+        # init music player
+        pygame.mixer.init()
+        # enable recognition
+        enable_rec=rospy.ServiceProxy('enable_recognition', Empty)
+        disable_rec=rospy.ServiceProxy('disable_recognition', Empty)
+        enable_rec()
+        #print(next(gather_information('What is your name').results).text.split('(')[0])
+        # listen to speech topic
+        rospy.Subscriber("speech", String, process_speech)
+        rospy.spin()
