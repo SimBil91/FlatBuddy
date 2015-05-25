@@ -12,6 +12,12 @@ Install pywapi: https://code.google.com/p/python-weather-api/
 If you used sudo to install with pip: change permissions of SpeechRecognition python library:
 Ubuntu Trusty: sudo chown -R username /usr/local/lib/python2.7/dist-packages/speech_recognition/  
 
+SETUP Nltk:
+type: python  
+import nltk  
+nltk.download()  
+--> download model: Punkt tokenizer models
+
 SETUP your web and mysql server:
 mysql:
 - login as root: mýsql -u root -p
