@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>new_object</class>
- <widget class="QWidget" name="new_object">
+ <class>change_room</class>
+ <widget class="QWidget" name="change_room">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>232</height>
+    <width>399</width>
+    <height>120</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Create new object</string>
+   <string>Change room</string>
   </property>
   <widget class="QWidget" name="verticalLayoutWidget">
    <property name="geometry">
@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>381</width>
-     <height>211</height>
+     <height>101</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -29,54 +29,28 @@
        <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
       </property>
       <item row="0" column="0">
-       <widget class="QLabel" name="label_2">
+       <widget class="QLabel" name="label">
         <property name="text">
-         <string>type:</string>
+         <string>id:</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLineEdit" name="line_obj_type"/>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_3">
+       <widget class="QLabel" name="label_obj_id">
         <property name="text">
-         <string>location:</string>
+         <string>id_label</string>
         </property>
        </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLineEdit" name="line_obj_loc"/>
-      </item>
-      <item row="3" column="0">
-       <widget class="QLabel" name="label_4">
-        <property name="text">
-         <string>feature:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLineEdit" name="line_obj_how"/>
-      </item>
-      <item row="4" column="0">
-       <widget class="QLabel" name="label_5">
-        <property name="text">
-         <string>tasks:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLineEdit" name="line_obj_tasks"/>
       </item>
       <item row="1" column="0">
-       <widget class="QLabel" name="label2">
+       <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>room</string>
+         <string>name</string>
         </property>
        </widget>
       </item>
       <item row="1" column="1">
-       <widget class="QComboBox" name="com_obj_room"/>
+       <widget class="QLineEdit" name="line_room_name"/>
       </item>
      </layout>
     </item>
@@ -96,16 +70,23 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="but_cancel_obj">
+       <widget class="QPushButton" name="but_del_room">
+        <property name="text">
+         <string>Delete</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="but_cancel_room">
         <property name="text">
          <string>Cancel</string>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="but_create_obj">
+       <widget class="QPushButton" name="but_upd_room">
         <property name="text">
-         <string>Create</string>
+         <string>Update</string>
         </property>
        </widget>
       </item>

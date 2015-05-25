@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'new_object.ui'
 #
-# Created: Fri Apr 10 17:00:34 2015
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Mon May 25 02:05:01 2015
+#      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -49,9 +49,9 @@ class Ui_new_object(object):
         self.label2 = QtGui.QLabel(self.verticalLayoutWidget)
         self.label2.setObjectName("label2")
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label2)
-        self.line_obj_room = QtGui.QLineEdit(self.verticalLayoutWidget)
-        self.line_obj_room.setObjectName("line_obj_room")
-        self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.line_obj_room)
+        self.com_obj_room = QtGui.QComboBox(self.verticalLayoutWidget)
+        self.com_obj_room.setObjectName("com_obj_room")
+        self.formLayout.setWidget(1, QtGui.QFormLayout.FieldRole, self.com_obj_room)
         self.verticalLayout.addLayout(self.formLayout)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)

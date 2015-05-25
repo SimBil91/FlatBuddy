@@ -93,24 +93,33 @@ class ControlMainWindow(QtGui.QMainWindow):
             db.commit();
             db.close();
             return 1
-        except MySQLdb.OperationalError and MySQLdb.ProgrammingError as err:
+        except (MySQLdb.OperationalError, MySQLdb.ProgrammingError) as err:
             if err[0]==1045:
                 QtGui.QMessageBox.warning(self, 'Server problem', 'Username or password invalid!')
             elif err[0]==1049:
                 QtGui.QMessageBox.warning(self, 'Server problem', 'No database "FB" found!')
             elif err[0]==1054 or err[0]==1146:
-                # create all necessary tables
-                db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
-                cursor = db.cursor()
-                cursor.execute('''CREATE TABLE IF NOT EXISTS objects(id INT PRIMARY KEY AUTO_INCREMENT, type TEXT,room TEXT, location TEXT, how TEXT)''')
-                cursor.execute('''CREATE TABLE IF NOT EXISTS sockets(id INT PRIMARY KEY AUTO_INCREMENT, objectID INT, IP TEXT, state INT)''')
-                cursor.execute('''CREATE TABLE IF NOT EXISTS mods(id INT PRIMARY KEY AUTO_INCREMENT, objectID INT, modification TEXT)''')
-                db.commit();
-                db.close();
+                self.init_database()
                 return 1
             else:
                 QtGui.QMessageBox.warning(self, 'Server problem', 'Server could not be reached!')
             return 0
+
+    def init_database(self):
+    # create all necessary tables
+        db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute('''CREATE TABLE IF NOT EXISTS objects(id INT PRIMARY KEY AUTO_INCREMENT, type TEXT,room INT, location TEXT, how TEXT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS sockets(id INT PRIMARY KEY AUTO_INCREMENT, objectID INT, IP TEXT, state INT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS mods(id INT PRIMARY KEY AUTO_INCREMENT, objectID INT, modification TEXT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS rooms(id INT PRIMARY KEY AUTO_INCREMENT, name TEXT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS interface_types(id INT PRIMARY KEY, type TEXT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS interfaces(id INT PRIMARY KEY AUTO_INCREMENT, IP TEXT, inter_type INT, room INT)''')
+        db.commit();
+    # insert hardcoded entries
+        cursor.execute('''INSERT IGNORE INTO interface_types(id,type) VALUES(%s,%s)''', (0,'IPCAM'))
+        db.commit();
+        db.close();
     def ask_for_master(self):
         self.hide()
         uim=Ui_master_ip()
@@ -138,10 +147,10 @@ class ControlMainWindow(QtGui.QMainWindow):
             self.init_main()
     
     def load_yaml(self):
-        with open('master.yml', 'r') as readfile:
-            data=yaml.load(readfile)
             try:
-                return [data['IP'],data['usr'],data['pwd']]
+                with open('master.yml', 'r') as readfile:
+                    data=yaml.load(readfile)
+                    return [data['IP'],data['usr'],data['pwd']]
             except:
                 return ['','','']
             
@@ -199,6 +208,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uin.but_cancel_obj.clicked.connect(self.uin.close)
         uin.but_create_obj.clicked.connect(lambda: self.create_new_object([uin.line_obj_type.text(),uin.line_obj_room.text(),uin.line_obj_loc.text(),uin.line_obj_how.text(),uin.line_obj_tasks.text()]))
         self.uin.show()
+    
     def create_new_object(self,data):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -213,6 +223,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         db.close()
         self.update_obj_items()
         self.uin.close()
+    
     def change_object(self,curr):
         # init new window:
         id=int(curr.text().split()[0][1:-1]) # extract id from string
@@ -338,6 +349,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uins.but_cancel_soc.clicked.connect(self.uins.close)
         uins.but_create_soc.clicked.connect(lambda: self.create_new_socket([self.read_combo_id(uins.combo_soc_new),uins.line_soc_IP.text()]))
         self.uins.show()
+
     def create_new_socket(self,data):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')

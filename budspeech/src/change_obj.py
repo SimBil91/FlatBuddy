@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'change_object.ui'
 #
-# Created: Fri Apr 10 16:44:12 2015
-#      by: pyside-uic 0.2.13 running on PySide 1.1.0
+# Created: Mon May 25 02:04:42 2015
+#      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,9 +12,9 @@ from PySide import QtCore, QtGui
 class Ui_change_object(object):
     def setupUi(self, change_object):
         change_object.setObjectName("change_object")
-        change_object.resize(400, 246)
+        change_object.resize(399, 241)
         self.verticalLayoutWidget = QtGui.QWidget(change_object)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 381, 227))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 381, 221))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -55,9 +55,9 @@ class Ui_change_object(object):
         self.label_6 = QtGui.QLabel(self.verticalLayoutWidget)
         self.label_6.setObjectName("label_6")
         self.formLayout.setWidget(2, QtGui.QFormLayout.LabelRole, self.label_6)
-        self.line_obj_room = QtGui.QLineEdit(self.verticalLayoutWidget)
-        self.line_obj_room.setObjectName("line_obj_room")
-        self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.line_obj_room)
+        self.com_obj_room = QtGui.QComboBox(self.verticalLayoutWidget)
+        self.com_obj_room.setObjectName("com_obj_room")
+        self.formLayout.setWidget(2, QtGui.QFormLayout.FieldRole, self.com_obj_room)
         self.verticalLayout.addLayout(self.formLayout)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
