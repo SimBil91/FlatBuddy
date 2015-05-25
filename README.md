@@ -3,7 +3,7 @@
 HOME AUTOMATION System based on open source software and low cost hardware.
 
 Prerequesites:
-Install following Ubuntu packages: sudo apt-get install python-pip, ros-indigo-desktop-full, lighttpd, mysql-server mysql-client
+Install following Ubuntu packages: sudo apt-get install python-pip, ros-indigo-desktop-full, lighttpd, mysql-server mysql-client, festival
 
 Install following python packages: sudo pip install SpeechRecognition, nltk, beautifulsoup4, wolframalpha, MySQL-python
 
