@@ -16,9 +16,9 @@ import pywapi
 import random
 import wolframalpha
 import yaml
-#from nltk.corpus import wordnet as wn
 from std_msgs.msg import String
 from std_srvs.srv import Empty
+import rospkg
 
 # GLOBAL variables
 conf_thres=0.5
@@ -30,9 +30,12 @@ radio=radiopy.Player()
 radio_pid=-1
 POWER=1
 client = wolframalpha.Client('ETRTW6-QUVU77J24J')
+rospack = rospkg.RosPack()
+path=rospack.get_path('budspeech')
+urllib_resp_timeout=0.2
 
 def load_yaml():
-    with open('master.yml', 'r') as readfile:
+    with open(path+'/src/master.yml', 'r') as readfile:
         data=yaml.load(readfile)
         try:
             return [data['IP'],data['usr'],data['pwd']]
@@ -53,7 +56,20 @@ def connect_to_master():
     except MySQLdb.OperationalError as err:
         print('Could not connect to server! Error code '+err[0])
         return 0
-    
+
+def check_interface(token):
+    # Determine where the speech command comes from
+    # look for bounding brackets and join the middle
+    if '{' in token and '}' in token:
+        interface=eval(''.join(token[token.index('{'):token.index('}')+1]))
+        try:
+            return interface['id']
+        except:
+            rospy.loginfo('Interface syntax wrong!')
+            return None
+    else:
+        return None
+
 def pre_parse(token):
     global aw_response
     global num_response
@@ -85,10 +101,12 @@ def pre_parse(token):
         return 1
     else:
         return -1
+
 def find_objects(what,column,string):
     db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
-    cursor.execute("SELECT %s FROM objects WHERE %s = %s" ,(what,column,string,))
+    query="SELECT %s FROM objects WHERE %s = " % (what,column)
+    cursor.execute(query+"%s",(string,))
     all_rows = cursor.fetchall() 
     # close DB
     db.close()   
@@ -97,7 +115,8 @@ def find_objects(what,column,string):
 def find_objects_id(what,column,ids):
     db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
-    cursor.execute("SELECT %s FROM objects WHERE %s IN (%s)" , (what,column,', '.join(map(str, ids))))
+    query="SELECT %s FROM objects WHERE %s IN " % (what,column)
+    cursor.execute(query+"(%s)" % (', '.join(map(str, ids)),))
     all_rows = cursor.fetchall() 
     # close DB
     db.close()   
@@ -106,11 +125,13 @@ def find_objects_id(what,column,ids):
 def find_mods(what,column,string):
     db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
-    cursor.execute("SELECT %s FROM mods WHERE %s = %s" , (what,column,string,))
+    query="SELECT %s FROM mods WHERE %s = " % (what,column)
+    cursor.execute(query+"%s" ,(string,))
     all_rows = cursor.fetchall() 
     # close DB
     db.close()   
     return all_rows
+
 def check_shout(text): 
     # checks for shouts and cuts it from the sentence for further processing
     global aw_response
@@ -195,6 +216,23 @@ def handle_input(tagged,token):
     #connect to DB
     db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
+    # check sending interface:
+    interface_id=check_interface(token)
+    try:
+        cursor.execute("SELECT inter_type,room,IP FROM interfaces WHERE id=%s", (interface_id,))
+        interface_data=cursor.fetchall()
+        cursor.execute("SELECT type FROM interface_types WHERE id=%s", (interface_data[0][0],))
+        type_name=cursor.fetchall()[0][0]
+        try:
+            cursor.execute("SELECT name FROM rooms WHERE id=%s", (interface_data[0][1],))
+            room_name=cursor.fetchall()[0][0]
+        except:
+            room_name=None
+        sender={'id':interface_id,'type':type_name,'room':room_name, 'IP':interface_data[0][2]}
+    except:
+        sender={'id':None,'type':None, 'IP':None, 'room':None}
+     
+    print(sender)
     global aw_response
     global num_response
     tasks=read_poss_tasks() # all possible tasks
@@ -207,10 +245,11 @@ def handle_input(tagged,token):
         # check if there is mentioned an object which supports this task
         for task in tasks_found:   
             # generate possible object names:  
-            obj_id_poss=list(sum(find_mods('objectID', 'modification',task), ()))
+            obj_id_poss=list(sum(find_mods('objectID','modification',task), ()))
             obj_poss=list(set(list(sum(find_objects_id('type','id',obj_id_poss), ()))))
             obj_poss_pl=[object+'s' for object in obj_poss]
             obj_found=check_keys(token,obj_poss+obj_poss_pl)
+            #print(str(obj_id_poss))
             result=0
             if len(obj_found)>0:
                 for object in obj_found:
@@ -221,7 +260,8 @@ def handle_input(tagged,token):
                         object=object[:-1]
                     # modify all objects if plural and 'all' is said
                     if obj_pl and 'all' in token:
-                        cursor.execute("SELECT id FROM objects WHERE id IN (%s) AND type = %s" % (', '.join(map(str, obj_id_poss),),),(object,))
+                        query="SELECT id FROM objects WHERE id IN (%s) AND type = " % (', '.join(map(str, obj_id_poss),),)
+                        cursor.execute(query+"%s" , (object,))
                         ids=list(sum(cursor.fetchall(), ())) 
                         result=perform_mod(token,object,ids,task)
                         if result==-1:
@@ -229,11 +269,13 @@ def handle_input(tagged,token):
                         elif result==0:
                             speak('I couldn\'t '+task+' all of the '+object_name) 
                     else:
-                        cursor.execute("SELECT room,location,how FROM objects WHERE id IN (%s) AND type = %s" % (', '.join(map(str, obj_id_poss),),),(object,))
+                        query="SELECT room,location,how FROM objects WHERE id IN (%s) AND type = " % (', '.join(map(str, obj_id_poss),),)
+                        cursor.execute(query+"%s" , (object,))
                         comb_poss=cursor.fetchall()  # generate from object list
                         if len(comb_poss)==1:
                             #Only one object found
-                            cursor.execute("SELECT id FROM objects WHERE id IN (%s) AND type = %s" % (', '.join(map(str, obj_id_poss),),),(object,))
+                            query="SELECT id FROM objects WHERE id IN (%s) AND type = " % (', '.join(map(str, obj_id_poss),),)
+                            cursor.execute(query+"%s",(object,))
                             id=list(sum(cursor.fetchall(), ())) 
                             result=perform_mod(token,object,id,task)
                             if result==-1:
@@ -243,18 +285,24 @@ def handle_input(tagged,token):
                             # more object found, look for ways to distinguish
                             loc_poss=[loc[1] for loc in comb_poss]
                             rooms_poss=[room[0] for room in comb_poss]
+                            rooms_poss_names=[]
+                            for room in rooms_poss:
+                                # get rooms name
+                                cursor.execute("SELECT name FROM rooms WHERE id=%s",(room,))
+                                rooms_poss_names.append(nltk.word_tokenize(cursor.fetchall()[0][0])[0])
                             how_poss=[how[2] for how in comb_poss]
                             loc_found=check_keys(token,loc_poss)
-                            rooms_found=check_keys(token,rooms_poss)
+                            rooms_found=check_keys(token,rooms_poss_names)
                             how_found=check_keys(token,how_poss)
                             more_info=-1
+                            
                             if len(loc_found)+len(rooms_found)+len(how_found)>0:
                                 # check the objects features
                                 query="SELECT id FROM objects WHERE id IN (%s)"
                                 query_var=[', '.join(map(str, obj_id_poss),)]
                                 if (len(rooms_found)>0): 
                                     query=query+" AND room IN (%s)"
-                                    query_var.append(', '.join(map(str, ['\''+room+'\'' for room in rooms_found]),))
+                                    query_var.append(', '.join(map(str, ['\''+str(rooms_poss[rooms_poss_names.index(room)])+'\'' for room in rooms_found ]),))
                                     aw_response=aw_response + ' ' + ' '.join(map(str, rooms_found))
                                 if (len(loc_found)>0): 
                                     query=query+" AND location IN (%s)"
@@ -264,8 +312,8 @@ def handle_input(tagged,token):
                                     query=query+" AND how IN (%s)"
                                     query_var.append(', '.join(map(str, ['\''+how+'\'' for how in how_found]),))
                                     aw_response=aw_response + ' ' + ' '.join(map(str, how_found))
-                                query=query+" AND type = %s"
-                                cursor.execute(query % tuple(query_var),(object,))
+                                query=query % tuple(query_var)
+                                cursor.execute(query+" AND type = %s",(object,))
                                 id=list(sum(cursor.fetchall(), ())) 
                                 if obj_pl==1 or len(id)==1:
                                     # turn on all the object with the feature
@@ -273,7 +321,7 @@ def handle_input(tagged,token):
                                     aw_response=''
                                     num_response=['',0]
                                     if result==-1:
-                                        speak('I can\'t '+task+' the '+object_name+' at the '+ location) 
+                                        speak('I can\'t '+task+' the '+object_name) 
                                 else:
                                     more_info=len(loc_found)+len(rooms_found)+len(how_found)
                             if (len(loc_found)+len(rooms_found)+len(how_found)==0) or more_info>-1:
@@ -601,15 +649,15 @@ def switch_power(on_off):
     for ip in IP:
         if on_off=='on':
             if int(ip[2])==1:
-                urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?on')
+                urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?on', timeout=urllib_resp_timeout)
             else:
-                urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?off')
+                urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?off', timeout=urllib_resp_timeout)
             POWER=1
         elif on_off=='off':
             try:
-                state=urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?state').read()
+                state=urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?state', timeout=urllib_resp_timeout).read()
                 if int(state)==1:
-                    urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?off')
+                    urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?off', timeout=urllib_resp_timeout)
                 cursor.execute("UPDATE sockets SET state = %s WHERE id = %s", (int(state),ip[0],))
                 POWER=0
             except:
@@ -627,12 +675,12 @@ def turn_on_off(objectIDs, on_off):
         IP=list(sum(cursor.fetchall(), ()))  # generate from object list
         try:
             if on_off=='on':
-                urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?on')
+                urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?on', timeout=urllib_resp_timeout)
                 result=1
             elif on_off=='state':
-                result=int(urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?state').read())+2
+                result=int(urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?state', timeout=urllib_resp_timeout).read())+2
             else:
-                urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?off')
+                urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?off', timeout=urllib_resp_timeout)
                 result=1
         except:
             error=1

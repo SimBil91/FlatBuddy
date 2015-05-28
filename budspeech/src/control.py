@@ -14,10 +14,16 @@ from change_obj import *
 from new_obj import *
 from new_soc import *
 from change_soc import *
+from change_interface import *
+from change_room import *
+from new_room import *
+from new_interface import *
 from master_ip import *
 import yaml
+import rospkg
 
-path=''
+rospack = rospkg.RosPack()
+path=rospack.get_path('budspeech')
 __version__ = '1.0.2'
 
 class ControlMainWindow(QtGui.QMainWindow):
@@ -41,7 +47,8 @@ class ControlMainWindow(QtGui.QMainWindow):
             
         self.ui.but_new_object.clicked.connect(self.new_object) 
         self.ui.but_new_socket.clicked.connect(self.new_socket) 
-        
+        self.ui.but_new_room.clicked.connect(self.new_room) 
+        self.ui.but_new_interface.clicked.connect(self.new_inter) 
         # Menu actions:
         self.ui.actionAbout.setShortcut('Ctrl+A')
         self.ui.actionAbout.setStatusTip('Show About Popup')
@@ -57,6 +64,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         states=[]
         ids=[]
         i=0
+        # display buttons for all sockets:
         for socket in all_socs:
             type=self.get_obj_type(socket[1])
             button = QtGui.QPushButton(str(socket[0])+': '+type)
@@ -83,6 +91,10 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.ui.list_objects.itemDoubleClicked.connect(self.change_object)
         self.update_soc_items()
         self.ui.list_sockets.itemDoubleClicked.connect(self.change_socket)
+        self.update_room_items()
+        self.ui.list_rooms.itemDoubleClicked.connect(self.change_room)
+        self.update_inter_items()
+        self.ui.list_interfaces.itemDoubleClicked.connect(self.change_inter)
         self.show()        
     def connect_to_master(self):
         #try to open database connection and look for users
@@ -117,7 +129,9 @@ class ControlMainWindow(QtGui.QMainWindow):
         cursor.execute('''CREATE TABLE IF NOT EXISTS interfaces(id INT PRIMARY KEY AUTO_INCREMENT, IP TEXT, inter_type INT, room INT)''')
         db.commit();
     # insert hardcoded entries
-        cursor.execute('''INSERT IGNORE INTO interface_types(id,type) VALUES(%s,%s)''', (0,'IPCAM'))
+        cursor.execute('''INSERT IGNORE INTO interface_types(id,type) VALUES(%s,%s)''', (1,'MASTER'))
+        cursor.execute('''INSERT IGNORE INTO interface_types(id,type) VALUES(%s,%s)''', (2,'IPCAM'))
+        cursor.execute('''INSERT IGNORE INTO interfaces(id,inter_type) VALUES(%s,%s)''', (1,1))
         db.commit();
         db.close();
     def ask_for_master(self):
@@ -129,7 +143,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uim.line_master_pwd.setText(self.pwd)
         uim.line_master_usr.setText(self.usr)
         uim.line_master_IP.setText(self.IP)
-        # button actions
+        # button actions 
         uim.but_quit_master.clicked.connect(self.uim.destroy)
         uim.but_save_master.clicked.connect(lambda: self.save_yaml([uim.line_master_IP.text(),uim.line_master_usr.text(),uim.line_master_pwd.text()]))
         self.uim.show()
@@ -148,7 +162,7 @@ class ControlMainWindow(QtGui.QMainWindow):
     
     def load_yaml(self):
             try:
-                with open('master.yml', 'r') as readfile:
+                with open(path+'/src/master.yml', 'r') as readfile:
                     data=yaml.load(readfile)
                     return [data['IP'],data['usr'],data['pwd']]
             except:
@@ -158,26 +172,62 @@ class ControlMainWindow(QtGui.QMainWindow):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         # get values for item
-        cursor.execute("SELECT type FROM objects WHERE id = %s", (str(id),))
-        type = cursor.fetchall()[0][0]
-        db.close()
-        return type
+        try:        
+            cursor.execute("SELECT type FROM objects WHERE id = %s", (str(id),))
+            type = cursor.fetchall()[0][0]
+            db.close()
+            return type
+        except:
+            return 'error'
+    
+    ## Update/Refresh TAB items
     def update_obj_items(self):
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()  
         self.ui.list_objects.clear()
         all_objects,all_tasks=self.get_all_objects()
         for row in all_objects:
             tasks=''
+            cursor.execute("SELECT name FROM rooms WHERE id=%s", (str(row[2]),))
+            room_name = cursor.fetchall() 
             for task in all_tasks:
                 if task[1]==row[0]:
                     tasks=tasks+task[2]+', '
-            QtGui.QListWidgetItem('|'+str(row[0])+'| '+str(row[1])+', '+str(row[2])+', '+str(row[3])+', '+str(row[4])+' | tasks: '+tasks[:-2], self.ui.list_objects)
-   
+            QtGui.QListWidgetItem('|'+str(row[0])+'| '+str(row[1])+', '+room_name[0][0]+', '+str(row[3])+', '+str(row[4])+' | tasks: '+tasks[:-2], self.ui.list_objects)
+        # close DB
+        db.close()
+
     def update_soc_items(self):
         self.ui.list_sockets.clear()
         all_sockets=self.get_all_sockets()
         for row in all_sockets:
             QtGui.QListWidgetItem('|'+str(row[0])+'| object: '+str(row[1])+', IP: '+str(row[2]), self.ui.list_sockets)
-          
+    
+    def update_room_items(self):
+        self.ui.list_rooms.clear()
+        all_rooms=self.get_all_rooms()
+        for row in all_rooms:
+            QtGui.QListWidgetItem('|'+str(row[0])+'| '+str(row[1]), self.ui.list_rooms)
+    
+    def update_inter_items(self):
+        # get room and interface_types names
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()         
+        self.ui.list_interfaces.clear()
+        all_inter=self.get_all_inter()
+        for row in all_inter:
+            cursor.execute("SELECT type FROM interface_types WHERE id=%s", (str(row[2]),))
+            inter_type = cursor.fetchall() 
+            try:
+                cursor.execute("SELECT name FROM rooms WHERE id=%s", (str(row[3]),))
+                room_name = cursor.fetchall() [0][0]
+            except:
+                room_name = ''
+            QtGui.QListWidgetItem('|'+str(row[0])+'| type: '+inter_type[0][0]+' | room: '+room_name+' | IP: '+str(row[1]), self.ui.list_interfaces)
+        # close DB
+        db.close()
+
+    ## GET all items of TABs            
     def get_all_objects(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
@@ -197,18 +247,82 @@ class ControlMainWindow(QtGui.QMainWindow):
         # close DB
         db.close()   
         return all_sockets
-    
+
+    def get_all_rooms(self):
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("SELECT id, name FROM rooms")
+        all_rooms = cursor.fetchall() 
+        # close DB
+        db.close()   
+        return all_rooms
+
+    def get_all_inter(self):
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("SELECT id, IP, inter_type, room FROM interfaces")
+        all_inter = cursor.fetchall() 
+        # close DB
+        db.close()   
+        return all_inter
+
+    def get_all_inter_types(self):
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("SELECT id, type FROM interface_types")
+        all_inter_types = cursor.fetchall() 
+        # close DB
+        db.close()   
+        return all_inter_types
+
+    # Create new item:
     def new_object(self):
         # init new window:
         uin=Ui_new_object()
         self.uin = QtGui.QWidget()
         uin.setupUi(self.uin)
-        
+        # fill combo boxes
+        self.fill_combo_inter_room(uin.com_obj_room)
         # button actions
         uin.but_cancel_obj.clicked.connect(self.uin.close)
-        uin.but_create_obj.clicked.connect(lambda: self.create_new_object([uin.line_obj_type.text(),uin.line_obj_room.text(),uin.line_obj_loc.text(),uin.line_obj_how.text(),uin.line_obj_tasks.text()]))
+        uin.but_create_obj.clicked.connect(lambda: self.create_new_object([uin.line_obj_type.text(),self.read_combo_id(uin.com_obj_room),uin.line_obj_loc.text(),uin.line_obj_how.text(),uin.line_obj_tasks.text()]))
         self.uin.show()
+
+    def new_socket(self):
+        # init new window:
+        uins=Ui_new_socket()
+        self.uins = QtGui.QWidget()
+        uins.setupUi(self.uins)
+        # fill combo box
+        self.fill_combo_soc(uins.combo_soc_new)
+        # button actions
+        uins.but_cancel_soc.clicked.connect(self.uins.close)
+        uins.but_create_soc.clicked.connect(lambda: self.create_new_socket([self.read_combo_id(uins.combo_soc_new),uins.line_soc_IP.text()]))
+        self.uins.show()
     
+    def new_room(self):
+        # init new window:
+        uinr=Ui_new_room()
+        self.uinr = QtGui.QWidget()
+        uinr.setupUi(self.uinr)
+        # button actions
+        uinr.but_cancel_room.clicked.connect(self.uinr.close)
+        uinr.but_create_room.clicked.connect(lambda: self.create_new_room([uinr.line_room_name.text()]))
+        self.uinr.show()
+        
+    def new_inter(self):
+        # init new window:
+        uini=Ui_new_interface()
+        self.uini = QtGui.QWidget()
+        uini.setupUi(self.uini)
+        # fill combo boxes
+        self.fill_combo_inter_room(uini.com_inter_room)
+        self.fill_combo_inter_type(uini.com_inter_type)
+        # button actions
+        uini.but_cancel_inter.clicked.connect(self.uini.close)
+        uini.but_create_inter.clicked.connect(lambda: self.create_new_inter([self.read_combo_id(uini.com_inter_type),self.read_combo_id(uini.com_inter_room),uini.line_inter_IP.text()]))
+        self.uini.show()
+
     def create_new_object(self,data):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -223,7 +337,41 @@ class ControlMainWindow(QtGui.QMainWindow):
         db.close()
         self.update_obj_items()
         self.uin.close()
+   
+    def create_new_socket(self,data):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO sockets(objectID,IP) VALUES(%s,%s)", (data[0],data[1]))
+        db.commit()
+        # close DB
+        db.close()
+        self.update_soc_items()
+        self.uins.close()
+
+    def create_new_room(self,data):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO rooms(name) VALUES(%s)", (data[0],))
+        db.commit()
+        # close DB
+        db.close()
+        self.update_room_items()
+        self.uinr.close()
     
+    def create_new_inter(self,data):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO interfaces(inter_type,room,IP) VALUES(%s,%s,%s)", (data[0],data[1],data[2]))
+        db.commit()
+        # close DB
+        db.close()
+        self.update_inter_items()
+        self.uini.close()
+
+    ## Change TAB items and update result
     def change_object(self,curr):
         # init new window:
         id=int(curr.text().split()[0][1:-1]) # extract id from string
@@ -233,6 +381,8 @@ class ControlMainWindow(QtGui.QMainWindow):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
+        # fill combo box
+        self.fill_combo_inter_room(uic.com_obj_room)
         # get values for item
         cursor.execute("SELECT  type, room, location, how FROM objects WHERE id = %s", (str(id),))
         obj_data = cursor.fetchall()[0]
@@ -244,45 +394,16 @@ class ControlMainWindow(QtGui.QMainWindow):
         # fill in current data
         uic.label_obj_id.setText(str(id))
         uic.line_obj_type.setText(obj_data[0])
-        uic.line_obj_room.setText(obj_data[1])
         uic.line_obj_loc.setText(obj_data[2])
         uic.line_obj_how.setText(obj_data[3])
         uic.line_obj_tasks.setText(tasks[:-2])
         # button actions
         uic.but_cancel_obj.clicked.connect(self.uicw.close)
-        uic.but_upd_obj.clicked.connect(lambda: self.update_object([id,uic.line_obj_type.text(),uic.line_obj_room.text(),uic.line_obj_loc.text(),uic.line_obj_how.text(),uic.line_obj_tasks.text()]))
+        uic.but_upd_obj.clicked.connect(lambda: self.update_object([id,uic.line_obj_type.text(),self.read_combo_id(uic.com_obj_room),uic.line_obj_loc.text(),uic.line_obj_how.text(),uic.line_obj_tasks.text()]))
         uic.but_del_obj.clicked.connect(lambda: self.delete_object(id))
         # close DB
         db.close()   
         self.uicw.show()
-        
-    def delete_object(self,id):
-        # connect db
-        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
-        cursor = db.cursor()
-        cursor.execute("DELETE FROM objects WHERE id = %s", (id,))
-        cursor.execute("DELETE FROM mods WHERE objectID = %s", (id,))
-        db.commit()
-        self.update_obj_items()
-        db.close()
-        self.uicw.close()
-        
-    def update_object(self,data):
-        # connect db
-        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
-        cursor = db.cursor()
-        cursor.execute("UPDATE objects SET type = %s, room = %s, location = %s, how = %s WHERE id = %s", (data[1],data[2],data[3],data[4],data[0]))
-        db.commit()
-        # drop all tasks 
-        cursor.execute("DELETE FROM mods WHERE objectID = %s", (data[0],))
-        db.commit()
-        for task in data[5].split(', '):
-            cursor.execute("INSERT INTO mods(objectID,modification) VALUES(%s,%s)", (data[0],task))
-        db.commit()
-        # close DB
-        db.close()
-        self.update_obj_items()
-        self.uicw.close()
 
     def change_socket(self,curr):
         # init new window:
@@ -308,17 +429,82 @@ class ControlMainWindow(QtGui.QMainWindow):
         # close DB
         db.close()   
         self.uis.show()
-    def read_combo_id(self,combo_soc):
-        text=combo_soc.currentText()
-        return int(text.split()[0][1:-1])
-    def fill_combo_soc(self,combo_soc):
-        all_objects,all_tasks=self.get_all_objects()
-        for row in all_objects:
-           combo_soc.addItem('|'+str(row[0])+'| '+str(row[1])+', '+str(row[2])+', '+str(row[3]))
-     
+
+    def change_room(self,curr):
+        # init new window:
+        id=int(curr.text().split()[0][1:-1]) # extract id from string
+        uir=Ui_change_room()
+        self.uir = QtGui.QWidget()
+        uir.setupUi(self.uir)
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        # get values for item
+        cursor.execute("SELECT name FROM rooms WHERE id = %s", (str(id),))
+        room_data = cursor.fetchall()[0]
+        # fill in current data
+        uir.label_room_id.setText(str(id))
+        uir.line_room_name.setText(room_data[0])
+        # button actions
+        uir.but_cancel_room.clicked.connect(self.uir.close)
+        uir.but_upd_room.clicked.connect(lambda: self.update_room([id,uir.line_room_name.text()]))
+        uir.but_del_room.clicked.connect(lambda: self.delete_room(id))
+        # close DB
+        db.close()   
+        self.uir.show()
+    
+    def change_inter(self,curr):
+        # init new window:
+        id=int(curr.text().split()[0][1:-1]) # extract id from string
+        uii=Ui_change_interface()
+        self.uii = QtGui.QWidget()
+        uii.setupUi(self.uii)
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        # get values for item
+        cursor.execute("SELECT  inter_type, room, IP FROM interfaces WHERE id = %s", (str(id),))
+        inter_data = cursor.fetchall()[0]
+        # fill in current data
+        uii.label_inter_id.setText(str(id))
+        uii.line_inter_IP.setText(inter_data[2])
+        # fill combo box
+        self.fill_combo_inter_room(uii.com_inter_room)
+        if (inter_data[0]==1):
+            all_inter_types=self.get_all_inter_types()
+            for row in all_inter_types:
+                if (str(row[1])=='MASTER'):
+                    uii.com_inter_type.addItem('|'+str(row[0])+'| '+str(row[1]))
+            uii.but_del_inter.setVisible(False);
+        else:
+            self.fill_combo_inter_type(uii.com_inter_type)
+        # button actions
+        uii.but_cancel_inter.clicked.connect(self.uii.close)
+        uii.but_upd_inter.clicked.connect(lambda: self.update_inter([id,self.read_combo_id(uii.com_inter_room),self.read_combo_id(uii.com_inter_type),uii.line_inter_IP.text()]))
+        uii.but_del_inter.clicked.connect(lambda: self.delete_inter(id))
+        # close DB
+        db.close()   
+        self.uii.show()
+
+    def update_object(self,data):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("UPDATE objects SET type = %s, room = %s, location = %s, how = %s WHERE id = %s", (data[1],data[2],data[3],data[4],data[0]))
+        db.commit()
+        # drop all tasks 
+        cursor.execute("DELETE FROM mods WHERE objectID = %s", (data[0],))
+        db.commit()
+        for task in data[5].split(', '):
+            cursor.execute("INSERT INTO mods(objectID,modification) VALUES(%s,%s)", (data[0],task))
+        db.commit()
+        # close DB
+        db.close()
+        self.update_obj_items()
+        self.uicw.close()
+
     def update_socket(self,data):
         # connect db
-        print(data)
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         cursor.execute("UPDATE sockets SET objectID = %s, IP = %s WHERE id = %s", (data[1],data[2],data[0]))
@@ -326,8 +512,42 @@ class ControlMainWindow(QtGui.QMainWindow):
         # close DB
         db.close()
         self.update_soc_items()
-        self.uis.close()      
+        self.uis.close()
         
+    def update_room(self,data):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("UPDATE rooms SET name = %s WHERE id = %s", (data[1],data[0]))
+        db.commit()
+        # close DB
+        db.close()
+        self.update_room_items()
+        self.uir.close()
+        
+    def update_inter(self,data):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("UPDATE interfaces SET room = %s, inter_type = %s, IP = %s WHERE id = %s", (data[1],data[2],data[3],data[0]))
+        db.commit()
+        # close DB
+        db.close()
+        self.update_inter_items()
+        self.uii.close()
+          
+    ## delete item:
+    def delete_object(self,id):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM objects WHERE id = %s", (id,))
+        cursor.execute("DELETE FROM mods WHERE objectID = %s", (id,))
+        db.commit()
+        self.update_obj_items()
+        db.close()
+        self.uicw.close()
+
     def delete_socket(self,id):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -337,29 +557,51 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.update_soc_items()
         db.close()
         self.uis.close()
-        
-    def new_socket(self):
-        # init new window:
-        uins=Ui_new_socket()
-        self.uins = QtGui.QWidget()
-        uins.setupUi(self.uins)
-        # fill combo box
-        self.fill_combo_soc(uins.combo_soc_new)
-        # button actions
-        uins.but_cancel_soc.clicked.connect(self.uins.close)
-        uins.but_create_soc.clicked.connect(lambda: self.create_new_socket([self.read_combo_id(uins.combo_soc_new),uins.line_soc_IP.text()]))
-        self.uins.show()
-
-    def create_new_socket(self,data):
+    
+    def delete_room(self,id):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
-        cursor.execute("INSERT INTO sockets(objectID,IP) VALUES(%s,%s)", (data[0],data[1]))
+        cursor.execute("DELETE FROM rooms WHERE id = %s", (id,))
         db.commit()
-        # close DB
+        self.update_room_items()
         db.close()
-        self.update_soc_items()
-        self.uins.close()
+        self.uir.close()
+    
+    def delete_inter(self,id):
+        # connect db
+        db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+        cursor = db.cursor()
+        cursor.execute("DELETE FROM interfaces WHERE id = %s", (id,))
+        db.commit()
+        self.update_inter_items()
+        db.close()
+        self.uii.close()
+    
+    ## Combo boxes:
+    def read_combo_id(self,combo_soc):
+        try:
+            text=combo_soc.currentText()
+            return int(text.split()[0][1:-1])
+        except:
+            return None
+
+    def fill_combo_soc(self,combo_soc):
+        all_objects,all_tasks=self.get_all_objects()
+        for row in all_objects:
+           combo_soc.addItem('|'+str(row[0])+'| '+str(row[1])+', '+str(row[2])+', '+str(row[3]))
+
+    def fill_combo_inter_room(self,combo_inter_room):
+        all_rooms=self.get_all_rooms()
+        for row in all_rooms:
+           combo_inter_room.addItem('|'+str(row[0])+'| '+str(row[1]))
+
+    def fill_combo_inter_type(self,combo_inter_type):
+        all_inter_types=self.get_all_inter_types()
+        for row in all_inter_types:
+            if (str(row[1])!='MASTER'):
+                combo_inter_type.addItem('|'+str(row[0])+'| '+str(row[1]))
+
     def open_website(self,url):
         return urllib2.urlopen(url)
 
@@ -381,7 +623,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         IP=list(sum(cursor.fetchall(), ()))  # generate from object list
         db.close()    
         try:
-            state=urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?state')
+            state=urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?state',timeout=0.8)
             return int(state.read())
         except:
             return -1
@@ -411,7 +653,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         <p>Copyright 2015 Simon Bilgeri.
         All rights reserved in accordance with
         GPL v2 or later - NO WARRANTIES!
-        <p>This application can be used to monitor and change the status of the FlatBUDDY syste 
+        <p>This application can be used to monitor and change the status of the FlatBUDDY system 
         aswell as interact with it.
         <p>Python %s -  PySide version %s - Qt version %s on %s""" % (__version__,
         platform.python_version(), PySide.__version__,  PySide.QtCore.__version__,

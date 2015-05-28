@@ -2,18 +2,18 @@
 
 # Form implementation generated from reading ui file 'new_room.ui'
 #
-# Created: Mon May 25 02:04:07 2015
+# Created: Mon May 25 11:04:17 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
 
 from PySide import QtCore, QtGui
 
-class Ui_new_object(object):
-    def setupUi(self, new_object):
-        new_object.setObjectName("new_object")
-        new_object.resize(397, 104)
-        self.verticalLayoutWidget = QtGui.QWidget(new_object)
+class Ui_new_room(object):
+    def setupUi(self, new_room):
+        new_room.setObjectName("new_room")
+        new_room.resize(397, 104)
+        self.verticalLayoutWidget = QtGui.QWidget(new_room)
         self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 381, 81))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
@@ -41,12 +41,12 @@ class Ui_new_object(object):
         self.horizontalLayout.addWidget(self.but_create_room)
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        self.retranslateUi(new_object)
-        QtCore.QMetaObject.connectSlotsByName(new_object)
+        self.retranslateUi(new_room)
+        QtCore.QMetaObject.connectSlotsByName(new_room)
 
-    def retranslateUi(self, new_object):
-        new_object.setWindowTitle(QtGui.QApplication.translate("new_object", "Create new room", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_2.setText(QtGui.QApplication.translate("new_object", "name:", None, QtGui.QApplication.UnicodeUTF8))
-        self.but_cancel_room.setText(QtGui.QApplication.translate("new_object", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
-        self.but_create_room.setText(QtGui.QApplication.translate("new_object", "Create", None, QtGui.QApplication.UnicodeUTF8))
+    def retranslateUi(self, new_room):
+        new_room.setWindowTitle(QtGui.QApplication.translate("new_room", "Create new room", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_2.setText(QtGui.QApplication.translate("new_room", "name:", None, QtGui.QApplication.UnicodeUTF8))
+        self.but_cancel_room.setText(QtGui.QApplication.translate("new_room", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
+        self.but_create_room.setText(QtGui.QApplication.translate("new_room", "Create", None, QtGui.QApplication.UnicodeUTF8))
 

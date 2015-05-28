@@ -56,7 +56,7 @@
        </widget>
       </item>
       <item row="2" column="1">
-       <widget class="QComboBox" name="con_inter_room"/>
+       <widget class="QComboBox" name="com_inter_room"/>
       </item>
      </layout>
     </item>

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'FlatBUDDY.ui'
 #
-# Created: Mon May 25 01:46:49 2015
+# Created: Mon May 25 12:21:12 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -180,7 +180,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.tab_control.setCurrentIndex(1)
+        self.tab_control.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 

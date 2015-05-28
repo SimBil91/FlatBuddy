@@ -36,7 +36,7 @@
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QLabel" name="label_obj_id">
+       <widget class="QLabel" name="label_room_id">
         <property name="text">
          <string>id_label</string>
         </property>

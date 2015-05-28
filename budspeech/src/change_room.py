@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'change_room.ui'
 #
-# Created: Mon May 25 02:04:20 2015
+# Created: Mon May 25 11:24:38 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -25,9 +25,9 @@ class Ui_change_room(object):
         self.label = QtGui.QLabel(self.verticalLayoutWidget)
         self.label.setObjectName("label")
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
-        self.label_obj_id = QtGui.QLabel(self.verticalLayoutWidget)
-        self.label_obj_id.setObjectName("label_obj_id")
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.label_obj_id)
+        self.label_room_id = QtGui.QLabel(self.verticalLayoutWidget)
+        self.label_room_id.setObjectName("label_room_id")
+        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.label_room_id)
         self.label_2 = QtGui.QLabel(self.verticalLayoutWidget)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_2)
@@ -56,7 +56,7 @@ class Ui_change_room(object):
     def retranslateUi(self, change_room):
         change_room.setWindowTitle(QtGui.QApplication.translate("change_room", "Change room", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("change_room", "id:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_obj_id.setText(QtGui.QApplication.translate("change_room", "id_label", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_room_id.setText(QtGui.QApplication.translate("change_room", "id_label", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("change_room", "name", None, QtGui.QApplication.UnicodeUTF8))
         self.but_del_room.setText(QtGui.QApplication.translate("change_room", "Delete", None, QtGui.QApplication.UnicodeUTF8))
         self.but_cancel_room.setText(QtGui.QApplication.translate("change_room", "Cancel", None, QtGui.QApplication.UnicodeUTF8))

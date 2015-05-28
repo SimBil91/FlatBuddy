@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'change_interface.ui'
 #
-# Created: Mon May 25 02:03:39 2015
+# Created: Mon May 25 12:03:02 2015
 #      by: pyside-uic 0.2.15 running on PySide 1.2.1
 #
 # WARNING! All changes made in this file will be lost!
@@ -25,9 +25,9 @@ class Ui_change_interface(object):
         self.label = QtGui.QLabel(self.verticalLayoutWidget)
         self.label.setObjectName("label")
         self.formLayout.setWidget(0, QtGui.QFormLayout.LabelRole, self.label)
-        self.label_obj_id = QtGui.QLabel(self.verticalLayoutWidget)
-        self.label_obj_id.setObjectName("label_obj_id")
-        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.label_obj_id)
+        self.label_inter_id = QtGui.QLabel(self.verticalLayoutWidget)
+        self.label_inter_id.setObjectName("label_inter_id")
+        self.formLayout.setWidget(0, QtGui.QFormLayout.FieldRole, self.label_inter_id)
         self.label_2 = QtGui.QLabel(self.verticalLayoutWidget)
         self.label_2.setObjectName("label_2")
         self.formLayout.setWidget(1, QtGui.QFormLayout.LabelRole, self.label_2)
@@ -51,15 +51,15 @@ class Ui_change_interface(object):
         self.verticalLayout.addItem(spacerItem)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.but_del_obj = QtGui.QPushButton(self.verticalLayoutWidget)
-        self.but_del_obj.setObjectName("but_del_obj")
-        self.horizontalLayout.addWidget(self.but_del_obj)
-        self.but_cancel_obj = QtGui.QPushButton(self.verticalLayoutWidget)
-        self.but_cancel_obj.setObjectName("but_cancel_obj")
-        self.horizontalLayout.addWidget(self.but_cancel_obj)
-        self.but_upd_obj = QtGui.QPushButton(self.verticalLayoutWidget)
-        self.but_upd_obj.setObjectName("but_upd_obj")
-        self.horizontalLayout.addWidget(self.but_upd_obj)
+        self.but_del_inter = QtGui.QPushButton(self.verticalLayoutWidget)
+        self.but_del_inter.setObjectName("but_del_inter")
+        self.horizontalLayout.addWidget(self.but_del_inter)
+        self.but_cancel_inter = QtGui.QPushButton(self.verticalLayoutWidget)
+        self.but_cancel_inter.setObjectName("but_cancel_inter")
+        self.horizontalLayout.addWidget(self.but_cancel_inter)
+        self.but_upd_inter = QtGui.QPushButton(self.verticalLayoutWidget)
+        self.but_upd_inter.setObjectName("but_upd_inter")
+        self.horizontalLayout.addWidget(self.but_upd_inter)
         self.verticalLayout.addLayout(self.horizontalLayout)
 
         self.retranslateUi(change_interface)
@@ -68,11 +68,11 @@ class Ui_change_interface(object):
     def retranslateUi(self, change_interface):
         change_interface.setWindowTitle(QtGui.QApplication.translate("change_interface", "Change Interface", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("change_interface", "id:", None, QtGui.QApplication.UnicodeUTF8))
-        self.label_obj_id.setText(QtGui.QApplication.translate("change_interface", "id_label", None, QtGui.QApplication.UnicodeUTF8))
+        self.label_inter_id.setText(QtGui.QApplication.translate("change_interface", "id_label", None, QtGui.QApplication.UnicodeUTF8))
         self.label_2.setText(QtGui.QApplication.translate("change_interface", "IP", None, QtGui.QApplication.UnicodeUTF8))
         self.label_6.setText(QtGui.QApplication.translate("change_interface", "type:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("change_interface", "room:", None, QtGui.QApplication.UnicodeUTF8))
-        self.but_del_obj.setText(QtGui.QApplication.translate("change_interface", "Delete", None, QtGui.QApplication.UnicodeUTF8))
-        self.but_cancel_obj.setText(QtGui.QApplication.translate("change_interface", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
-        self.but_upd_obj.setText(QtGui.QApplication.translate("change_interface", "Update", None, QtGui.QApplication.UnicodeUTF8))
+        self.but_del_inter.setText(QtGui.QApplication.translate("change_interface", "Delete", None, QtGui.QApplication.UnicodeUTF8))
+        self.but_cancel_inter.setText(QtGui.QApplication.translate("change_interface", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
+        self.but_upd_inter.setText(QtGui.QApplication.translate("change_interface", "Update", None, QtGui.QApplication.UnicodeUTF8))
 
