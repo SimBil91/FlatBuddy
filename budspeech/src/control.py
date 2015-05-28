@@ -101,7 +101,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         try: 
             db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
             cursor = db.cursor()
-            cursor.execute("SELECT type FROM objects")
+            cursor.execute("SELECT usr FROM interfaces")
             db.commit();
             db.close();
             return 1
@@ -126,7 +126,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         cursor.execute('''CREATE TABLE IF NOT EXISTS mods(id INT PRIMARY KEY AUTO_INCREMENT, objectID INT, modification TEXT)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS rooms(id INT PRIMARY KEY AUTO_INCREMENT, name TEXT)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS interface_types(id INT PRIMARY KEY, type TEXT)''')
-        cursor.execute('''CREATE TABLE IF NOT EXISTS interfaces(id INT PRIMARY KEY AUTO_INCREMENT, IP TEXT, inter_type INT, room INT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS interfaces(id INT PRIMARY KEY AUTO_INCREMENT, IP TEXT, inter_type INT, room INT, usr TEXT, pwd TEXT)''')
         db.commit();
     # insert hardcoded entries
         cursor.execute('''INSERT IGNORE INTO interface_types(id,type) VALUES(%s,%s)''', (1,'MASTER'))
@@ -155,7 +155,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         reached=self.connect_to_master()
         if reached:
             # save to yaml file
-            with open('master.yml', 'w') as outfile:
+            with open(path+'/src/master.yml', 'w') as outfile:
                 outfile.write( yaml.dump(write_data, default_flow_style=True) )
             self.uim.close()
             self.init_main()
@@ -260,7 +260,7 @@ class ControlMainWindow(QtGui.QMainWindow):
     def get_all_inter(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
-        cursor.execute("SELECT id, IP, inter_type, room FROM interfaces")
+        cursor.execute("SELECT id, IP, inter_type, room,usr,pwd FROM interfaces")
         all_inter = cursor.fetchall() 
         # close DB
         db.close()   
@@ -315,12 +315,13 @@ class ControlMainWindow(QtGui.QMainWindow):
         uini=Ui_new_interface()
         self.uini = QtGui.QWidget()
         uini.setupUi(self.uini)
+        uini.lin_inter_pwd.setEchoMode(QtGui.QLineEdit.Password)
         # fill combo boxes
         self.fill_combo_inter_room(uini.com_inter_room)
         self.fill_combo_inter_type(uini.com_inter_type)
         # button actions
         uini.but_cancel_inter.clicked.connect(self.uini.close)
-        uini.but_create_inter.clicked.connect(lambda: self.create_new_inter([self.read_combo_id(uini.com_inter_type),self.read_combo_id(uini.com_inter_room),uini.line_inter_IP.text()]))
+        uini.but_create_inter.clicked.connect(lambda: self.create_new_inter([self.read_combo_id(uini.com_inter_type),self.read_combo_id(uini.com_inter_room),uini.line_inter_IP.text(),uini.lin_inter_usr.text(),uini.lin_inter_pwd.text()]))
         self.uini.show()
 
     def create_new_object(self,data):
@@ -364,7 +365,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
-        cursor.execute("INSERT INTO interfaces(inter_type,room,IP) VALUES(%s,%s,%s)", (data[0],data[1],data[2]))
+        cursor.execute("INSERT INTO interfaces(inter_type,room,IP,usr,pwd) VALUES(%s,%s,%s,%s,%s)", (data[0],data[1],data[2],data[3],data[4]))
         db.commit()
         # close DB
         db.close()
@@ -463,11 +464,14 @@ class ControlMainWindow(QtGui.QMainWindow):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         # get values for item
-        cursor.execute("SELECT  inter_type, room, IP FROM interfaces WHERE id = %s", (str(id),))
+        cursor.execute("SELECT  inter_type, room, IP,usr,pwd FROM interfaces WHERE id = %s", (str(id),))
         inter_data = cursor.fetchall()[0]
+        uii.lin_inter_pwd.setEchoMode(QtGui.QLineEdit.Password)
         # fill in current data
         uii.label_inter_id.setText(str(id))
         uii.line_inter_IP.setText(inter_data[2])
+        uii.lin_inter_usr.setText(inter_data[3])
+        uii.lin_inter_pwd.setText(inter_data[4])
         # fill combo box
         self.fill_combo_inter_room(uii.com_inter_room)
         if (inter_data[0]==1):
@@ -480,7 +484,7 @@ class ControlMainWindow(QtGui.QMainWindow):
             self.fill_combo_inter_type(uii.com_inter_type)
         # button actions
         uii.but_cancel_inter.clicked.connect(self.uii.close)
-        uii.but_upd_inter.clicked.connect(lambda: self.update_inter([id,self.read_combo_id(uii.com_inter_room),self.read_combo_id(uii.com_inter_type),uii.line_inter_IP.text()]))
+        uii.but_upd_inter.clicked.connect(lambda: self.update_inter([id,self.read_combo_id(uii.com_inter_room),self.read_combo_id(uii.com_inter_type),uii.line_inter_IP.text(),uii.lin_inter_usr.text(),uii.lin_inter_pwd.text()]))
         uii.but_del_inter.clicked.connect(lambda: self.delete_inter(id))
         # close DB
         db.close()   
@@ -529,7 +533,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
-        cursor.execute("UPDATE interfaces SET room = %s, inter_type = %s, IP = %s WHERE id = %s", (data[1],data[2],data[3],data[0]))
+        cursor.execute("UPDATE interfaces SET room = %s, inter_type = %s, IP = %s, usr = %s, pwd = %s WHERE id = %s", (data[1],data[2],data[3],data[4],data[5],data[0]))
         db.commit()
         # close DB
         db.close()

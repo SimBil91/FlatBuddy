@@ -6,7 +6,7 @@
 # private key: AIzaSyD_RN5bb7QvX5YEHg5nWT2Q2D3PWA9dWwE
 import speech_recognition as sr
 import rospy
-from std_msgs.msg import String
+from budspeech.msg import speech
 
 # Edit parameters
 #r = sr.Recognizer(language = "en-US", key = "AIzaSyD_RN5bb7QvX5YEHg5nWT2Q2D3PWA9dWwE")
@@ -33,13 +33,16 @@ def callback(recognizer, audio):                          # this is called from 
     try:
             # listen for the first phrase and extract it into audio data
         if rec_state==1:
+            message = speech()
             result = recognizer.recognize(audio, True)
-            pub.publish(str(result[0]))
+            message.text=str(result[0]['text'])
+            message.confidence=result[0]['confidence']
+            message.interface_id=1
+            pub.publish(message)
             rospy.loginfo(result) 
-            print(recognizer.energy_threshold )
         else:
             print('Recognition disabled')
-    except:
+    except LookupError as e:
         rospy.loginfo("Could not understand sentence!") 
 
 
@@ -47,7 +50,7 @@ if __name__ == '__main__':
     # Init node
     rospy.init_node('recognition')
     # init Publisher
-    pub = rospy.Publisher('speech', String)
+    pub = rospy.Publisher('speech', speech)
     # init Service
     s_en = rospy.Service('enable_recognition', Empty, enable_recognition)
     s_dis = rospy.Service('disable_recognition', Empty, disable_recognition)

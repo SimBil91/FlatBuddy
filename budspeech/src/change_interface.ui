@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>178</height>
+    <height>243</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -19,7 +19,7 @@
      <x>10</x>
      <y>10</y>
      <width>381</width>
-     <height>161</height>
+     <height>227</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -71,6 +71,26 @@
       </item>
       <item row="3" column="1">
        <widget class="QComboBox" name="com_inter_room"/>
+      </item>
+      <item row="4" column="0">
+       <widget class="QLabel" name="usernameLabel">
+        <property name="text">
+         <string>username:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLineEdit" name="lin_inter_usr"/>
+      </item>
+      <item row="5" column="0">
+       <widget class="QLabel" name="passwordLabel">
+        <property name="text">
+         <string>password:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="lin_inter_pwd"/>
       </item>
      </layout>
     </item>

@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'change_interface.ui'
 #
-# Created: Mon May 25 12:03:02 2015
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Thu May 28 16:44:38 2015
+#      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -12,9 +12,9 @@ from PySide import QtCore, QtGui
 class Ui_change_interface(object):
     def setupUi(self, change_interface):
         change_interface.setObjectName("change_interface")
-        change_interface.resize(400, 178)
+        change_interface.resize(400, 243)
         self.verticalLayoutWidget = QtGui.QWidget(change_interface)
-        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 381, 161))
+        self.verticalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 381, 227))
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.verticalLayout = QtGui.QVBoxLayout(self.verticalLayoutWidget)
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -46,6 +46,18 @@ class Ui_change_interface(object):
         self.com_inter_room = QtGui.QComboBox(self.verticalLayoutWidget)
         self.com_inter_room.setObjectName("com_inter_room")
         self.formLayout.setWidget(3, QtGui.QFormLayout.FieldRole, self.com_inter_room)
+        self.usernameLabel = QtGui.QLabel(self.verticalLayoutWidget)
+        self.usernameLabel.setObjectName("usernameLabel")
+        self.formLayout.setWidget(4, QtGui.QFormLayout.LabelRole, self.usernameLabel)
+        self.lin_inter_usr = QtGui.QLineEdit(self.verticalLayoutWidget)
+        self.lin_inter_usr.setObjectName("lin_inter_usr")
+        self.formLayout.setWidget(4, QtGui.QFormLayout.FieldRole, self.lin_inter_usr)
+        self.passwordLabel = QtGui.QLabel(self.verticalLayoutWidget)
+        self.passwordLabel.setObjectName("passwordLabel")
+        self.formLayout.setWidget(5, QtGui.QFormLayout.LabelRole, self.passwordLabel)
+        self.lin_inter_pwd = QtGui.QLineEdit(self.verticalLayoutWidget)
+        self.lin_inter_pwd.setObjectName("lin_inter_pwd")
+        self.formLayout.setWidget(5, QtGui.QFormLayout.FieldRole, self.lin_inter_pwd)
         self.verticalLayout.addLayout(self.formLayout)
         spacerItem = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem)
@@ -72,6 +84,8 @@ class Ui_change_interface(object):
         self.label_2.setText(QtGui.QApplication.translate("change_interface", "IP", None, QtGui.QApplication.UnicodeUTF8))
         self.label_6.setText(QtGui.QApplication.translate("change_interface", "type:", None, QtGui.QApplication.UnicodeUTF8))
         self.label_3.setText(QtGui.QApplication.translate("change_interface", "room:", None, QtGui.QApplication.UnicodeUTF8))
+        self.usernameLabel.setText(QtGui.QApplication.translate("change_interface", "username:", None, QtGui.QApplication.UnicodeUTF8))
+        self.passwordLabel.setText(QtGui.QApplication.translate("change_interface", "password:", None, QtGui.QApplication.UnicodeUTF8))
         self.but_del_inter.setText(QtGui.QApplication.translate("change_interface", "Delete", None, QtGui.QApplication.UnicodeUTF8))
         self.but_cancel_inter.setText(QtGui.QApplication.translate("change_interface", "Cancel", None, QtGui.QApplication.UnicodeUTF8))
         self.but_upd_inter.setText(QtGui.QApplication.translate("change_interface", "Update", None, QtGui.QApplication.UnicodeUTF8))

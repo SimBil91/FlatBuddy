@@ -16,8 +16,8 @@ import pywapi
 import random
 import wolframalpha
 import yaml
-from std_msgs.msg import String
 from std_srvs.srv import Empty
+from budspeech.msg import speech
 import rospkg
 
 # GLOBAL variables
@@ -57,18 +57,25 @@ def connect_to_master():
         print('Could not connect to server! Error code '+err[0])
         return 0
 
-def check_interface(token):
-    # Determine where the speech command comes from
-    # look for bounding brackets and join the middle
-    if '{' in token and '}' in token:
-        interface=eval(''.join(token[token.index('{'):token.index('}')+1]))
+def check_interface(interface_id):
+    db = MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
+    cursor = db.cursor()
+    try:
+        cursor.execute("SELECT inter_type,room,IP,usr,pwd FROM interfaces WHERE id=%s", (interface_id,))
+        interface_data=cursor.fetchall()
+        cursor.execute("SELECT type FROM interface_types WHERE id=%s", (interface_data[0][0],))
+        type_name=cursor.fetchall()[0][0]
         try:
-            return interface['id']
+            cursor.execute("SELECT name FROM rooms WHERE id=%s", (interface_data[0][1],))
+            room_name=cursor.fetchall()[0][0]
         except:
-            rospy.loginfo('Interface syntax wrong!')
-            return None
-    else:
-        return None
+            room_name=None
+        sender={'id':interface_id,'type':type_name,'room':room_name, 'IP':interface_data[0][2], 'usr':interface_data[0][3],'pwd':interface_data[0][4]}
+    except:
+        sender={'id':None,'type':None, 'IP':None, 'room':None, 'usr':None, 'pwd':None}
+    db.close()
+    
+    return sender
 
 def pre_parse(token):
     global aw_response
@@ -140,6 +147,7 @@ def check_shout(text):
         aw_response=''
         return text
     if shout in text.lower():
+        print(text)
         return text[text.lower().find(shout)+len(shout)+1:]
     else: 
         return False
@@ -147,16 +155,12 @@ def check_shout(text):
 def process_speech(data):
     # called if speech is recognized
     global aw_response
-    text=''
-    try:
-        sentence=eval(str(data)[5:]) # dict is read
-    except:
-        # consider that a string was send directly
-        sentence={'text':str(data)[5:],'confidence':0}
-    if sentence['confidence']==0: 
-        sentence['confidence']=1
-    if sentence['confidence'] > conf_thres:
-        text=check_shout(sentence['text'])#
+    text=False
+    # consider that a string was send directly
+    if data.confidence==0: 
+        data.confidence=1
+    if data.confidence > conf_thres:
+        text=check_shout(data.text)
     if text!=False:
         if text=='':
             speak('Yes?')
@@ -164,9 +168,8 @@ def process_speech(data):
         else:
             token=nltk.word_tokenize(text)
             #tagged=nltk.pos_tag(token)
-            tagged=[]
             if (pre_parse(token)!=1):
-                handle_input(tagged,token)
+                handle_input(token,data.interface_id)
 
         
 
@@ -208,30 +211,14 @@ def read_poss_tasks():
     # delete identical entries
     return list(set(all_rows_nt))
     
-
-def handle_input(tagged,token):
+def handle_input(token,interface_id):
     # perform tasks
     # Mandatory: What kind of TASK? (Verb), optional: WHAT, WHERE, WHEN? # asks back if necessary but missing
     # check if there is an modifiable object mentioned and a possible task
     #connect to DB
     db= MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
-    cursor = db.cursor()
-    # check sending interface:
-    interface_id=check_interface(token)
-    try:
-        cursor.execute("SELECT inter_type,room,IP FROM interfaces WHERE id=%s", (interface_id,))
-        interface_data=cursor.fetchall()
-        cursor.execute("SELECT type FROM interface_types WHERE id=%s", (interface_data[0][0],))
-        type_name=cursor.fetchall()[0][0]
-        try:
-            cursor.execute("SELECT name FROM rooms WHERE id=%s", (interface_data[0][1],))
-            room_name=cursor.fetchall()[0][0]
-        except:
-            room_name=None
-        sender={'id':interface_id,'type':type_name,'room':room_name, 'IP':interface_data[0][2]}
-    except:
-        sender={'id':None,'type':None, 'IP':None, 'room':None}
-     
+    cursor = db.cursor() 
+    sender=check_interface(interface_id)
     print(sender)
     global aw_response
     global num_response
@@ -702,5 +689,5 @@ if __name__ == '__main__':
         enable_rec()
         #print(next(gather_information('What is your name').results).text.split('(')[0])
         # listen to speech topic
-        rospy.Subscriber("speech", String, process_speech)
+        rospy.Subscriber("speech", speech, process_speech)
         rospy.spin()
