@@ -3,7 +3,7 @@
 HOME AUTOMATION System based on open source software and low cost hardware.
 
 Prerequesites:
-Install following Ubuntu packages: sudo apt-get install python-pip, ros-indigo-desktop-full, lighttpd, mysql-server mysql-client
+Install following Ubuntu packages: sudo apt-get install python-pip, ros-indigo-desktop-full, lighttpd, mysql-server mysql-client, festival
 
 Install following python packages: sudo pip install SpeechRecognition, nltk, beautifulsoup4, wolframalpha, MySQL-python
 
@@ -11,6 +11,12 @@ Install pywapi: https://code.google.com/p/python-weather-api/
 
 If you used sudo to install with pip: change permissions of SpeechRecognition python library:
 Ubuntu Trusty: sudo chown -R username /usr/local/lib/python2.7/dist-packages/speech_recognition/  
+
+SETUP Nltk:
+type: python  
+import nltk  
+nltk.download()  
+--> download model: Punkt tokenizer models
 
 SETUP your web and mysql server:
 mysql:
