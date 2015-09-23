@@ -2,8 +2,8 @@
 
 # Form implementation generated from reading ui file 'FlatBUDDY.ui'
 #
-# Created: Mon May 25 12:21:12 2015
-#      by: pyside-uic 0.2.15 running on PySide 1.2.1
+# Created: Wed Sep 23 00:36:55 2015
+#      by: pyside-uic 0.2.13 running on PySide 1.1.0
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -55,8 +55,19 @@ class Ui_MainWindow(object):
         self.label_center.setAlignment(QtCore.Qt.AlignCenter)
         self.label_center.setObjectName("label_center")
         self.verticalLayout_3.addWidget(self.label_center)
-        spacerItem1 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
-        self.verticalLayout_3.addItem(spacerItem1)
+        self.horizontalLayout_8 = QtGui.QHBoxLayout()
+        self.horizontalLayout_8.setObjectName("horizontalLayout_8")
+        spacerItem1 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_8.addItem(spacerItem1)
+        self.but_open_stream = QtGui.QPushButton(self.verticalLayoutWidget_2)
+        self.but_open_stream.setEnabled(False)
+        self.but_open_stream.setObjectName("but_open_stream")
+        self.horizontalLayout_8.addWidget(self.but_open_stream)
+        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_8.addItem(spacerItem2)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_8)
+        spacerItem3 = QtGui.QSpacerItem(20, 40, QtGui.QSizePolicy.Minimum, QtGui.QSizePolicy.Expanding)
+        self.verticalLayout_3.addItem(spacerItem3)
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.label = QtGui.QLabel(self.verticalLayoutWidget_2)
@@ -89,8 +100,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_7.addWidget(self.list_rooms)
         self.horizontalLayout_13 = QtGui.QHBoxLayout()
         self.horizontalLayout_13.setObjectName("horizontalLayout_13")
-        spacerItem2 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_13.addItem(spacerItem2)
+        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_13.addItem(spacerItem4)
         self.but_new_room = QtGui.QPushButton(self.verticalLayoutWidget_6)
         self.but_new_room.setObjectName("but_new_room")
         self.horizontalLayout_13.addWidget(self.but_new_room)
@@ -109,8 +120,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_4.addWidget(self.list_objects)
         self.horizontalLayout_10 = QtGui.QHBoxLayout()
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
-        spacerItem3 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_10.addItem(spacerItem3)
+        spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_10.addItem(spacerItem5)
         self.but_new_object = QtGui.QPushButton(self.verticalLayoutWidget_3)
         self.but_new_object.setObjectName("but_new_object")
         self.horizontalLayout_10.addWidget(self.but_new_object)
@@ -129,8 +140,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_5.addWidget(self.list_sockets)
         self.horizontalLayout_11 = QtGui.QHBoxLayout()
         self.horizontalLayout_11.setObjectName("horizontalLayout_11")
-        spacerItem4 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_11.addItem(spacerItem4)
+        spacerItem6 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_11.addItem(spacerItem6)
         self.but_new_socket = QtGui.QPushButton(self.verticalLayoutWidget_4)
         self.but_new_socket.setObjectName("but_new_socket")
         self.horizontalLayout_11.addWidget(self.but_new_socket)
@@ -149,8 +160,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_6.addWidget(self.list_interfaces)
         self.horizontalLayout_12 = QtGui.QHBoxLayout()
         self.horizontalLayout_12.setObjectName("horizontalLayout_12")
-        spacerItem5 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
-        self.horizontalLayout_12.addItem(spacerItem5)
+        spacerItem7 = QtGui.QSpacerItem(40, 20, QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Minimum)
+        self.horizontalLayout_12.addItem(spacerItem7)
         self.but_new_interface = QtGui.QPushButton(self.verticalLayoutWidget_5)
         self.but_new_interface.setObjectName("but_new_interface")
         self.horizontalLayout_12.addWidget(self.but_new_interface)
@@ -187,6 +198,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "FlatBUDDY - CONTROL V1.0", None, QtGui.QApplication.UnicodeUTF8))
         self.label_center.setText(QtGui.QApplication.translate("MainWindow", "FlatBUDDY CONTROL V1.0", None, QtGui.QApplication.UnicodeUTF8))
+        self.but_open_stream.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>send message to server</p><p><br/></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
+        self.but_open_stream.setText(QtGui.QApplication.translate("MainWindow", "Open Stream", None, QtGui.QApplication.UnicodeUTF8))
         self.label.setText(QtGui.QApplication.translate("MainWindow", "Command:", None, QtGui.QApplication.UnicodeUTF8))
         self.line_speech.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>Send message to FlatBUDDY</p></body></html>", None, QtGui.QApplication.UnicodeUTF8))
         self.but_send_com.setToolTip(QtGui.QApplication.translate("MainWindow", "<html><head/><body><p>send message to server</p><p><br/></p></body></html>", None, QtGui.QApplication.UnicodeUTF8))

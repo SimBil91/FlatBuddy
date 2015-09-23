@@ -17,8 +17,10 @@ import random
 import wolframalpha
 import yaml
 from std_srvs.srv import Empty
+from std_msgs.msg import String
 from budspeech.msg import speech
 import rospkg
+import time
 
 # GLOBAL variables
 conf_thres=0.5
@@ -29,6 +31,7 @@ path=rospkg.RosPack().get_path('budspeech')
 radio=radiopy.Player()
 radio_pid=-1
 POWER=1
+sender=[]
 client = wolframalpha.Client('ETRTW6-QUVU77J24J')
 rospack = rospkg.RosPack()
 path=rospack.get_path('budspeech')
@@ -60,6 +63,7 @@ def connect_to_master():
 def check_interface(interface_id):
     db = MySQLdb.connect(master_IP,master_usr,master_pwd,'FB')
     cursor = db.cursor()
+    global sender
     try:
         cursor.execute("SELECT inter_type,room,IP,usr,pwd FROM interfaces WHERE id=%s", (interface_id,))
         interface_data=cursor.fetchall()
@@ -157,13 +161,17 @@ def process_speech(data):
     global aw_response
     text=False
     # consider that a string was send directly
+    sender=check_interface(data.interface_id)
     if data.confidence==0: 
         data.confidence=1
     if data.confidence > conf_thres:
         text=check_shout(data.text)
     if text!=False:
         if text=='':
-            speak('Yes?')
+            if sender['type']=='MASTER':
+                speak('Yes?')
+            if sender['type']=='IPCAM':
+                cam_pub.publish('follow')
             aw_response=' '
         else:
             token=nltk.word_tokenize(text)
@@ -174,18 +182,24 @@ def process_speech(data):
         
 
 def speak(sentence,background=0):
-    #soundhandle.voiceSound(sentence).play()
-    #engine.say(sentence)
-    #engine.runAndWait()
     print('Says: '+sentence)
-    if background:
-        os.system('echo \"'+sentence+'\" | festival --tts &')
+    if (sender['type']=='MASTER'):
+        if background:
+            os.system('echo \"'+sentence+'\" | festival --tts &')
+        else:
+            disable_rec()
+            os.system('echo \"'+sentence+'\" | festival --tts')
+            rospy.sleep(0.7)
+            enable_rec()
+    elif sender['type']=='IPCAM':
+        if '?' in sentence:
+            cam_pub.publish('shake')
+            aw_response=' '
     else:
-        disable_rec()
-        os.system('echo \"'+sentence+'\" | festival --tts')
-        rospy.sleep(0.7)
-        enable_rec()
-    #rospy.sleep(0.5*len(sentence))
+        time.sleep(0.2)
+        rep_pub.publish(sentence)
+        
+
 
 def check_keys(token,keys):
     # checks which keys are mentioned in sentence, returns list
@@ -225,6 +239,10 @@ def handle_input(token,interface_id):
     tasks=read_poss_tasks() # all possible tasks
     # check which tasks are found in NL
     tasks_found=[]
+    # add 'yes' to tokens to avoid quesetion when using an ipcam
+    if sender['type']=='IPCAM':
+        token.append('yes')
+        
     for task in tasks:
         if list(set(check_keys(token,nltk.word_tokenize(task))))==nltk.word_tokenize(task):
             tasks_found.append(task)
@@ -250,7 +268,7 @@ def handle_input(token,interface_id):
                         query="SELECT id FROM objects WHERE id IN (%s) AND type = " % (', '.join(map(str, obj_id_poss),),)
                         cursor.execute(query+"%s" , (object,))
                         ids=list(sum(cursor.fetchall(), ())) 
-                        result=perform_mod(token,object,ids,task)
+                        result=perform_mod(token,object,ids,task,sender)
                         if result==-1:
                             speak('I can\'t '+task+' the '+object_name) 
                         elif result==0:
@@ -264,7 +282,7 @@ def handle_input(token,interface_id):
                             query="SELECT id FROM objects WHERE id IN (%s) AND type = " % (', '.join(map(str, obj_id_poss),),)
                             cursor.execute(query+"%s",(object,))
                             id=list(sum(cursor.fetchall(), ())) 
-                            result=perform_mod(token,object,id,task)
+                            result=perform_mod(token,object,id,task,sender)
                             if result==-1:
                                     speak('I can\'t '+task+' the '+object_name) 
                             break
@@ -304,7 +322,7 @@ def handle_input(token,interface_id):
                                 id=list(sum(cursor.fetchall(), ())) 
                                 if obj_pl==1 or len(id)==1:
                                     # turn on all the object with the feature
-                                    result=perform_mod(token,object,id,task)
+                                    result=perform_mod(token,object,id,task,sender)
                                     aw_response=''
                                     num_response=['',0]
                                     if result==-1:
@@ -343,6 +361,8 @@ def handle_input(token,interface_id):
     else:
         # Give an answer
         speak('Sorry, I don\'t understand!')
+        if sender['type']=='IPCAM':
+            cam_pub.publish('shake')
     # give answers
     db.close()
 def play_confirm():
@@ -351,57 +371,33 @@ def play_confirm():
     pygame.mixer.music.set_volume(0.7)
     pygame.mixer.music.play()
     
-def perform_mod(token,object,objectIDs,task):
+def perform_mod(token,object,objectIDs,task,sender):
     global radio
     global radio_pid
-    play_confirm()
+    
+    result=1
     ## TURN ON, TURN OFF OBJECT or POWER
     if task=='turn on':
         if object!='power':
-            return turn_on_off(objectIDs,'on')
+            result=turn_on_off(objectIDs,'on')
         else:
             if POWER==0:
                 enable_rec()
-                return switch_power('on')
+                result= switch_power('on')
             else:
-                return -1
+                result= -1
     elif task=='turn off':
         if object!='power':
-            return turn_on_off(objectIDs,'off')
+            result= turn_on_off(objectIDs,'off')
         else:
             if POWER==1:
                 disable_rec()
-                return switch_power('off')
+                result= switch_power('off')
             else:
-                return -1
-    ## PLAY,STOP,CHANGE MUSIC
-    elif task=='play':
-        if radio_pid==-1:
-            channel=check_genre(token)
-            if channel==-1:
-                radio_pid=radio.play_random()
-            else:
-                radio_pid=radio.play(channel)
-        else: 
-            return -1
-    elif task=='stop':
-        if radio_pid>=0:
-            radio.kill_mplayer(radio_pid)
-            radio_pid=-1
-        else:
-            return -1
-    elif task=='change':
-        if radio_pid>=0:
-            radio.kill_mplayer(radio_pid)
-            radio_pid=radio.play_random()
-        else:
-            return -1
-    ## WEATHER
-    elif (task=='is' or task=='tell' or task=='\'s') and object=='weather':
-        return check_weather('Munich, Germany',token,1)
+                result= -1
     ## FLASH THE LIGHT
     elif task=='flash' and object=='light':
-        return flash_light(objectIDs,0.2,8)
+        result= flash_light(objectIDs,0.2,8)
     ## SET TIMER // ALARM
     elif task=='set':
         if object=='timer':
@@ -413,11 +409,51 @@ def perform_mod(token,object,objectIDs,task):
             if duration>0:
                 speak('Set alarm to %d hours and %d minutes.' % ((duration/3600),(duration/60)%60)) 
                 rospy.Timer(rospy.Duration(duration), result_alarm, True)
+    ## PLAY,STOP,CHANGE MUSIC # only if master
+    elif task=='play' and sender['type']!='IPCAM':
+        if radio_pid==-1:
+            channel=check_genre(token)
+            if channel==-1:
+                radio_pid=radio.play_random()
+            else:
+                radio_pid=radio.play(channel)
+        else: 
+            result= -1
+    elif task=='stop':
+        if radio_pid>=0:
+            radio.kill_mplayer(radio_pid)
+            radio_pid=-1
+        else:
+            result= -1
+    elif task=='change':
+        if radio_pid>=0:
+            radio.kill_mplayer(radio_pid)
+            radio_pid=radio.play_random()
+        else:
+            result= -1
+    ## WEATHER
+    elif (task=='is' or task=='tell' or task=='\'s') and object=='weather' and sender['type']!='IPCAM':
+        result= check_weather('Munich, Germany',token,1)
     ## GO TO BED
-    elif task=='go to' or task=='sleep':
+    elif task=='go to' or task=='sleep' and sender['type']!='IPCAM':
         prepare_sleep_mode(token,task,object)
+    ## MOVE CAMERA
+    elif task=='move' and object=='camera':
+        result=move_camera(token)
     else:
+        result=-1
         speak('I don''t know how to '+ task +' the '+object)
+    if result==1:
+        if sender['type']=='IPCAM':
+            cam_pub.publish('nod')
+        elif sender['type']=='MASTER':
+            play_confirm()
+        else:
+            rep_pub.publish('done!')
+    else:
+        if sender['type']=='IPCAM':
+            cam_pub.publish('shake')
+    return result
 
 def gather_information(question):
     global client
@@ -464,7 +500,10 @@ def wakeup_mode(event):
     while pygame.mixer.music.get_busy() == True:
         continue
     rospy.sleep(1)
-    process_speech('data: '+shout+' '+'turn on the light at the bed')
+    message=speech()
+    message.confidence=1
+    message.text='data: '+shout+' '+'turn on the light at the bed'
+    process_speech(message)
     speak('Good morning!')
     check_weather('Munich, Germany', [],1)
 def get_time(token,task,object,real_obj,questions):
@@ -562,7 +601,18 @@ def convert_time_to_sec(time_list):
                 minutes_togo=minutes_togo-1
             duration=hours_togo*3600+minutes_togo*60+seconds_togo
     return duration
-
+def move_camera(token):
+    if 'up' in token:
+        cam_pub.publish('up')
+    elif 'down' in token:
+        cam_pub.publish('down')
+    elif 'left' in token:
+        cam_pub.publish('left')
+    elif 'right' in token:
+        cam_pub.publish('right')
+    else:
+        return -1
+    
 def check_weather(location,token,current):
     # current=True: give current weather
     day=0
@@ -687,7 +737,10 @@ if __name__ == '__main__':
         enable_rec=rospy.ServiceProxy('enable_recognition', Empty)
         disable_rec=rospy.ServiceProxy('disable_recognition', Empty)
         enable_rec()
-        #print(next(gather_information('What is your name').results).text.split('(')[0])
         # listen to speech topic
         rospy.Subscriber("speech", speech, process_speech)
+        # Cam publisher
+        cam_pub = rospy.Publisher('budCAM', String)
+        # Reply publisher
+        rep_pub = rospy.Publisher('budrep', String)
         rospy.spin()

@@ -81,13 +81,13 @@ if __name__ == '__main__':
     sender_data=cursor.fetchall()[IPCAM_iter] # id of IPCAM, can be given by launchfile
     db.close()
     # Init IP audio
-    #try:
-    IPCAM=pyTenvis.pyTenvis(sender_data[1],sender_data[2],sender_data[3])
-    taudio=IPCAM.audio
+    try:
+        IPCAM=pyTenvis.pyTenvis(sender_data[1],sender_data[2],sender_data[3])
+        taudio=IPCAM.audio
     #sleep(0.1)
-#except:
-    rospy.loginfo('IPCAM not reached. Check your settings')
-    #exit()
+    except:
+        rospy.loginfo('IPCAM not reached. Check your settings')
+        exit()
     
     # init Publisher
     pub = rospy.Publisher('speech', speech)

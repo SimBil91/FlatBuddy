@@ -19,8 +19,10 @@ from change_room import *
 from new_room import *
 from new_interface import *
 from master_ip import *
+from webstream import *
 import yaml
 import rospkg
+import cv2
 
 rospack = rospkg.RosPack()
 path=rospack.get_path('budspeech')
@@ -44,11 +46,17 @@ class ControlMainWindow(QtGui.QMainWindow):
         # define Button events
         self.ui.but_send_com.clicked.connect(lambda: self.send_speech(self.ui.line_speech.text()))
         self.ui.line_speech.returnPressed.connect(lambda: self.send_speech(self.ui.line_speech.text()))
-            
         self.ui.but_new_object.clicked.connect(self.new_object) 
         self.ui.but_new_socket.clicked.connect(self.new_socket) 
         self.ui.but_new_room.clicked.connect(self.new_room) 
         self.ui.but_new_interface.clicked.connect(self.new_inter) 
+        self.ui.but_open_stream.clicked.connect(self.show_stream) 
+        # Check if camera defined
+        Inter_types=self.get_all_inter_types()
+        ipcam_id=[item[0] for item in Inter_types if item[1] == 'IPCAM'][0]
+        IPCAMS=[item for item in self.get_all_inter() if item[0] == ipcam_id]
+        if IPCAMS:
+            self.ui.but_open_stream.setEnabled(True)
         # Menu actions:
         self.ui.actionAbout.setShortcut('Ctrl+A')
         self.ui.actionAbout.setStatusTip('Show About Popup')
@@ -95,7 +103,56 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.ui.list_rooms.itemDoubleClicked.connect(self.change_room)
         self.update_inter_items()
         self.ui.list_interfaces.itemDoubleClicked.connect(self.change_inter)
-        self.show()        
+        self.show()  
+        
+    class Stream_Widget( QtGui.QWidget):
+
+        def __init__(self,IP):
+            QtGui.QWidget.__init__(self)
+            self.IP=IP
+        def open_website(self,url):
+            return urllib2.urlopen(url)
+
+        def send_speech(self,speech):
+            try:
+                fullurl = 'http://'+self.IP+'/cgi-bin/send.py?speech='+str(speech)
+                fullurl = urllib.quote(fullurl, safe="%/:=&?~#+!$,;'@()*[]")
+                Thread(target=self.open_website, args=[fullurl]).start()
+            except: 
+                print('Cannot move camera')
+            
+        def keyPressEvent(self, event):
+
+            key = event.key()
+            
+            if key == QtCore.Qt.Key_Left:
+                self.send_speech('move camera left')
+            elif key == QtCore.Qt.Key_Right:
+                self.send_speech('move camera right')
+            elif key == QtCore.Qt.Key_Down:
+                self.send_speech('move camera down')
+            elif key == QtCore.Qt.Key_Up:
+                self.send_speech('move camera up')
+            else:
+                QtGui.QWidget.keyPressEvent(self, event)
+          
+    def show_stream(self):
+         # init new window:
+        uiw=Ui_webstream()
+        self.uiw = self.Stream_Widget(self.IP)
+        uiw.setupUi(self.uiw)
+        key=0  
+        self.uiw.show()
+        new_image=QtGui.QPixmap()
+        while key!='q':
+            try:
+                new_image.load('/var/www/pics/stream.jpg')
+                image=new_image
+                uiw.img_stream.setPixmap(image)  
+            except:
+                print('couldnt load frame')       
+            key=cv2.waitKey(30)
+            
     def connect_to_master(self):
         #try to open database connection and look for users
         try: 
@@ -607,14 +664,19 @@ class ControlMainWindow(QtGui.QMainWindow):
                 combo_inter_type.addItem('|'+str(row[0])+'| '+str(row[1]))
 
     def open_website(self,url):
-        return urllib2.urlopen(url)
+        h=urllib2.urlopen(url)
+        message=h.read()
+        html_id=message.find('</html>')   
+        message=message[html_id+9:].replace('\n', ' ').replace('\r', '') 
+        print(message)   
+        self.statusBar().showMessage(message)
 
     def send_speech(self,speech):
         try:
             fullurl = 'http://'+self.IP+'/cgi-bin/send.py?speech='+str(speech)
             fullurl = urllib.quote(fullurl, safe="%/:=&?~#+!$,;'@()*[]")
-            Thread(target=self.open_website, args=(fullurl,)).start()
-            self.statusBar().showMessage('Message sent')
+            self.open_website(fullurl)
+            #self.statusBar().showMessage('Message sent')
             self.ui.line_speech.setText('') 
         except:
             self.statusBar().showMessage('cannot reach server')
