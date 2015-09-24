@@ -153,15 +153,17 @@ class ControlMainWindow(QtGui.QMainWindow):
         uiw.setupUi(self.uiw)
         key=0  
         self.uiw.show()
-        new_image=QtGui.QPixmap()
         while key!='q':
             try:
-                new_image.load('/var/www/pics/stream.jpg')
-                image=new_image
+                new_image=QtGui.QPixmap()
+                h=urllib2.urlopen('http://'+self.IP+'/pics/stream.jpg')
+                img=h.read()
+                if new_image.loadFromData(img,'jpg'):
+                    image=new_image
                 uiw.img_stream.setPixmap(image)  
             except:
                 print('couldnt load frame')       
-            key=cv2.waitKey(30)
+            key=cv2.waitKey(500)
             
     def connect_to_master(self):
         #try to open database connection and look for users
