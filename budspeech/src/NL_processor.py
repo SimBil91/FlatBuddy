@@ -440,6 +440,12 @@ def perform_mod(token,object,objectIDs,task,sender):
     ## MOVE CAMERA
     elif task=='move' and object=='camera':
         result=move_camera(token)
+    ## LEAVE THE HOUSE
+    elif task=='leave' and object=='I':
+        result=leave_house()
+    ## BACK HOME
+    elif task=='\'m back' or 'am back' and object=='I':
+        result=back_home()
     else:
         result=-1
         speak('I don''t know how to '+ task +' the '+object)
@@ -453,6 +459,25 @@ def perform_mod(token,object,objectIDs,task,sender):
     else:
         if sender['type']=='IPCAM':
             cam_pub.publish('shake')
+    return result
+
+def leave_house():
+    global radio
+    global radio_pid
+    result=switch_power('off')
+    # turn off music
+    if radio_pid>=0:
+        radio.kill_mplayer(radio_pid)
+        radio_pid=-1
+    else:
+        result= -1
+    # activate camera stream
+    cam_pub.publish('start_stream')
+    return result
+def back_home():
+    result=switch_power('on')
+    # deactivate camera stream
+    cam_pub.publish('stop_stream')
     return result
 
 def gather_information(question):
@@ -685,11 +710,14 @@ def switch_power(on_off):
     global POWER
     for ip in IP:
         if on_off=='on':
-            if int(ip[2])==1:
-                urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?on', timeout=urllib_resp_timeout)
-            else:
-                urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?off', timeout=urllib_resp_timeout)
-            POWER=1
+            try:
+                if int(ip[2])==1:
+                    urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?on', timeout=urllib_resp_timeout)
+                else:
+                    urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?off', timeout=urllib_resp_timeout)
+                POWER=1
+            except:
+                print('cannot switch the power on')
         elif on_off=='off':
             try:
                 state=urllib2.urlopen('http://'+ip[1]+'/cgi-bin/turn.cgi?state', timeout=urllib_resp_timeout).read()
@@ -736,7 +764,10 @@ if __name__ == '__main__':
         # enable recognition
         enable_rec=rospy.ServiceProxy('enable_recognition', Empty)
         disable_rec=rospy.ServiceProxy('disable_recognition', Empty)
-        enable_rec()
+        try:
+            enable_rec()
+        except:
+            rospy.loginfo('no recognition node found')
         # listen to speech topic
         rospy.Subscriber("speech", speech, process_speech)
         # Cam publisher

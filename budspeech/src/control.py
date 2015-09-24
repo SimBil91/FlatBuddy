@@ -26,14 +26,16 @@ import cv2
 
 rospack = rospkg.RosPack()
 path=rospack.get_path('budspeech')
-__version__ = '1.0.2'
+__version__ = '1.1.0'
 
 class ControlMainWindow(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(ControlMainWindow, self).__init__(parent)
+        # start in local mode
+        self.remote=False
         # try to connect to master
-        [self.IP,self.usr,self.pwd]=self.load_yaml()
+        [self.IP,self.usr,self.pwd,self.authusr,self.authpwd]=self.load_yaml()
         reached=self.connect_to_master()
         if not reached:
             self.ask_for_master()
@@ -46,17 +48,18 @@ class ControlMainWindow(QtGui.QMainWindow):
         # define Button events
         self.ui.but_send_com.clicked.connect(lambda: self.send_speech(self.ui.line_speech.text()))
         self.ui.line_speech.returnPressed.connect(lambda: self.send_speech(self.ui.line_speech.text()))
-        self.ui.but_new_object.clicked.connect(self.new_object) 
-        self.ui.but_new_socket.clicked.connect(self.new_socket) 
-        self.ui.but_new_room.clicked.connect(self.new_room) 
-        self.ui.but_new_interface.clicked.connect(self.new_inter) 
         self.ui.but_open_stream.clicked.connect(self.show_stream) 
-        # Check if camera defined
-        Inter_types=self.get_all_inter_types()
-        ipcam_id=[item[0] for item in Inter_types if item[1] == 'IPCAM'][0]
-        IPCAMS=[item for item in self.get_all_inter() if item[0] == ipcam_id]
-        if IPCAMS:
-            self.ui.but_open_stream.setEnabled(True)
+        if not self.remote:
+            self.ui.but_new_object.clicked.connect(self.new_object) 
+            self.ui.but_new_socket.clicked.connect(self.new_socket) 
+            self.ui.but_new_room.clicked.connect(self.new_room) 
+            self.ui.but_new_interface.clicked.connect(self.new_inter) 
+            # Check if camera defined
+            Inter_types=self.get_all_inter_types()
+            ipcam_id=[item[0] for item in Inter_types if item[1] == 'IPCAM'][0]
+            IPCAMS=[item for item in self.get_all_inter() if item[0] == ipcam_id]
+            if IPCAMS:
+                self.ui.but_open_stream.setEnabled(True)
         # Menu actions:
         self.ui.actionAbout.setShortcut('Ctrl+A')
         self.ui.actionAbout.setStatusTip('Show About Popup')
@@ -64,45 +67,52 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.ui.actionExit.setShortcut('Ctrl+Q')
         self.ui.actionExit.setStatusTip('Exit Program')
         self.ui.actionExit.triggered.connect(self.destroy)
-        # generate socket buttons, which indicate the state and if reachable  
-        self.ui.layout_buttons.addStretch(1) 
-        all_socs=self.get_all_sockets()
-        self.ui.button_group=QtGui.QButtonGroup(self.ui.layout_buttons)
-        buttons=[]
-        states=[]
-        ids=[]
-        i=0
-        # display buttons for all sockets:
-        for socket in all_socs:
-            type=self.get_obj_type(socket[1])
-            button = QtGui.QPushButton(str(socket[0])+': '+type)
-            state=self.get_state_socket(socket[0])
-            if state != -1:
-                if state==0:
-                    button.setStyleSheet('QPushButton {background-color: red; color: white;}')
+        # don't show the socket buttons in remote mode
+        if not self.remote:
+            # generate socket buttons, which indicate the state and if reachable  
+            self.ui.layout_buttons.addStretch(1) 
+            all_socs=self.get_all_sockets()
+            self.ui.button_group=QtGui.QButtonGroup(self.ui.layout_buttons)
+            buttons=[]
+            states=[]
+            ids=[]
+            i=0
+
+            # display buttons for all sockets:
+            for socket in all_socs:
+                type=self.get_obj_type(socket[1])
+                button = QtGui.QPushButton(str(socket[0])+': '+type)
+                state=self.get_state_socket(socket[0])
+                if state != -1:
+                    if state==0:
+                        button.setStyleSheet('QPushButton {background-color: red; color: white;}')
+                    else:
+                        button.setStyleSheet('QPushButton {background-color: green; color: white;}')
                 else:
-                    button.setStyleSheet('QPushButton {background-color: green; color: white;}')
-            else:
-                button.setStyleSheet('QPushButton {background-color: grey; color: white;}')
-            self.ui.button_group.addButton(button,socket[0])
-            buttons.append(button) 
-            states.append(state)
-            ids.append(socket[0])
-            i=i+1
-            self.ui.layout_buttons.addWidget(button)
-        # set action 
-        self.ui.button_group.buttonClicked.connect(self.switch_socket) 
-        self.ui.layout_buttons.addStretch(1)  
-        # add current objects to listWidget
-        # read all
-        self.update_obj_items()
-        self.ui.list_objects.itemDoubleClicked.connect(self.change_object)
-        self.update_soc_items()
-        self.ui.list_sockets.itemDoubleClicked.connect(self.change_socket)
-        self.update_room_items()
-        self.ui.list_rooms.itemDoubleClicked.connect(self.change_room)
-        self.update_inter_items()
-        self.ui.list_interfaces.itemDoubleClicked.connect(self.change_inter)
+                    button.setStyleSheet('QPushButton {background-color: grey; color: white;}')
+                self.ui.button_group.addButton(button,socket[0])
+                buttons.append(button) 
+                states.append(state)
+                ids.append(socket[0])
+                i=i+1
+                self.ui.layout_buttons.addWidget(button)
+            # set action 
+            self.ui.button_group.buttonClicked.connect(self.switch_socket) 
+            self.ui.layout_buttons.addStretch(1)  
+            # add current objects to listWidget
+            # read all
+            self.update_obj_items()
+            self.ui.list_objects.itemDoubleClicked.connect(self.change_object)
+            self.update_soc_items()
+            self.ui.list_sockets.itemDoubleClicked.connect(self.change_socket)
+            self.update_room_items()
+            self.ui.list_rooms.itemDoubleClicked.connect(self.change_room)
+            self.update_inter_items()
+            self.ui.list_interfaces.itemDoubleClicked.connect(self.change_inter)
+            # if remote mode: remove config tab
+        else:
+            self.ui.but_open_stream.setEnabled(True)
+            self.ui.tab_control.removeTab(self.ui.tab_control.indexOf(self.ui.tab_4))
         self.show()  
         
     class Stream_Widget( QtGui.QWidget):
@@ -155,25 +165,50 @@ class ControlMainWindow(QtGui.QMainWindow):
             
     def connect_to_master(self):
         #try to open database connection and look for users
+        result=1
+        if not self.remote:
+            try: 
+                db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
+                cursor = db.cursor()
+                cursor.execute("SELECT usr FROM interfaces")
+                db.commit();
+                db.close();
+                result = 1
+            except (MySQLdb.OperationalError, MySQLdb.ProgrammingError) as err:
+                if err[0]==1045:
+                    QtGui.QMessageBox.warning(self, 'Server problem', 'Mysql Username or password invalid!')
+                elif err[0]==1049:
+                    QtGui.QMessageBox.warning(self, 'Server problem', 'No database "FB" found!')
+                elif err[0]==1054 or err[0]==1146:
+                    self.init_database()
+                    result= 1
+                else:
+                    QtGui.QMessageBox.warning(self, 'Server problem', 'Server could not be reached!')
+                result = 2
+        # try to connect and get data from the server
+        # try to authenticate
+        self.auth_http(self.authusr,self.authpwd)
         try: 
-            db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
-            cursor = db.cursor()
-            cursor.execute("SELECT usr FROM interfaces")
-            db.commit();
-            db.close();
-            return 1
-        except (MySQLdb.OperationalError, MySQLdb.ProgrammingError) as err:
-            if err[0]==1045:
-                QtGui.QMessageBox.warning(self, 'Server problem', 'Username or password invalid!')
-            elif err[0]==1049:
-                QtGui.QMessageBox.warning(self, 'Server problem', 'No database "FB" found!')
-            elif err[0]==1054 or err[0]==1146:
-                self.init_database()
-                return 1
+            domain='http://'+self.IP+'/index.html'
+            self.open_website(domain)
+            if result==2:
+                result=0
             else:
-                QtGui.QMessageBox.warning(self, 'Server problem', 'Server could not be reached!')
-            return 0
-
+                result=1
+        except:
+            QtGui.QMessageBox.warning(self, 'Server', 'Authentification failure!')
+            result = 0
+        return result
+        
+    def auth_http(self,user, pwd):
+        passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        # this creates a password manager
+        passman.add_password(None, 'http://'+self.IP, user, pwd)
+        authhandler = urllib2.HTTPBasicAuthHandler(passman)
+        # create the AuthHandler
+        opener = urllib2.build_opener(authhandler)
+        urllib2.install_opener(opener)
+        
     def init_database(self):
     # create all necessary tables
         db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -191,24 +226,38 @@ class ControlMainWindow(QtGui.QMainWindow):
         cursor.execute('''INSERT IGNORE INTO interfaces(id,inter_type) VALUES(%s,%s)''', (1,1))
         db.commit();
         db.close();
+        
     def ask_for_master(self):
         self.hide()
         uim=Ui_master_ip()
         self.uim = QtGui.QWidget()
         uim.setupUi(self.uim)
         uim.line_master_pwd.setEchoMode(QtGui.QLineEdit.Password)
+        uim.line_auth_pwd.setEchoMode(QtGui.QLineEdit.Password)
         uim.line_master_pwd.setText(self.pwd)
         uim.line_master_usr.setText(self.usr)
         uim.line_master_IP.setText(self.IP)
+        uim.line_auth_pwd.setText(self.authpwd)
+        uim.line_auth_usr.setText(self.authusr)
+        uim.check_remote.stateChanged.connect(lambda: self.switch_remote([uim.check_remote.isChecked()]))
         # button actions 
         uim.but_quit_master.clicked.connect(self.uim.destroy)
-        uim.but_save_master.clicked.connect(lambda: self.save_yaml([uim.line_master_IP.text(),uim.line_master_usr.text(),uim.line_master_pwd.text()]))
+        uim.but_save_master.clicked.connect(lambda: self.save_yaml([uim.line_master_IP.text(),uim.line_auth_usr.text(),uim.line_auth_pwd.text(),uim.line_master_usr.text(),uim.line_master_pwd.text()]))
         self.uim.show()
+        
+    def switch_remote (self,state):
+        if state[0]:
+            self.remote=True
+        else:
+            self.remote=False
+        
     def save_yaml(self,data):
         self.IP=data[0]
-        self.usr=data[1]
-        self.pwd=data[2]
-        write_data={'IP':self.IP,'usr':self.usr,'pwd':self.pwd}
+        self.authusr=data[1]
+        self.authpwd=data[2]
+        self.usr=data[3]
+        self.pwd=data[4]
+        write_data={'IP':self.IP,'authusr':self.authusr,'authpwd':self.authpwd,'usr':self.usr,'pwd':self.pwd}
         reached=self.connect_to_master()
         if reached:
             # save to yaml file
@@ -221,9 +270,9 @@ class ControlMainWindow(QtGui.QMainWindow):
             try:
                 with open(path+'/src/master.yml', 'r') as readfile:
                     data=yaml.load(readfile)
-                    return [data['IP'],data['usr'],data['pwd']]
+                    return [data['IP'],data['usr'],data['pwd'],data['authusr'],data['authpwd']]
             except:
-                return ['','','']
+                return ['','','','','']
             
     def get_obj_type(self, id):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')

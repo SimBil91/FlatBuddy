@@ -1,1 +1,2 @@
-{IP: !!python/unicode '192.168.2.109', pwd: !!python/unicode 'Penner12', usr: !!python/unicode 'Buddy'}
+{IP: !!python/unicode '192.168.2.109', authpwd: !!python/unicode 'Dasisteinl@ngeswort',
+  authusr: !!python/unicode 'FlatBuddy', pwd: !!python/unicode 'Penner12', usr: !!python/unicode 'Buddy'}

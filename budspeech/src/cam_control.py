@@ -29,6 +29,7 @@ def cam_command(com):
     com=com.data
     IPCAM.motor.stop=False
     IPCAM.video.stop=False
+    t3 = Thread(target=IPCAM.video.stream, args=('/var/www/pics/',))
     if com=='shake':
         IPCAM.motor.stop=True
         IPCAM.video.stop=True
@@ -59,6 +60,11 @@ def cam_command(com):
         t1.start()
         t2.start()
         #t2.join()
+    elif com=='start_stream':
+        IPCAM.video.show_stream=True
+        t3.start()
+    elif com=='stop_stream':
+        IPCAM.video.show_stream=False
     elif com=='stop':
         IPCAM.motor.stop=True
         IPCAM.video.stop=True
