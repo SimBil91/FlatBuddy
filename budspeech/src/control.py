@@ -156,7 +156,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         while key!='q':
             try:
                 new_image=QtGui.QPixmap()
-                h=urllib2.urlopen('http://'+self.IP+'/pics/stream.jpg')
+                h=urllib2.urlopen('http://'+self.IP+'/pics/stream.jpg',timeout=0.1)
                 img=h.read()
                 if new_image.loadFromData(img,'jpg'):
                     image=new_image
