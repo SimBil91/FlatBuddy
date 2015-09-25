@@ -24,6 +24,7 @@ from webstream import *
 import yaml
 import rospkg
 import cv2
+import time
 
 rospack = rospkg.RosPack()
 path=rospack.get_path('budspeech')
@@ -147,6 +148,12 @@ class ControlMainWindow(QtGui.QMainWindow):
                 self.send_speech('move camera up')
             else:
                 QtGui.QWidget.keyPressEvent(self, event)
+    
+    def stream_image(self):
+        while 1:
+            h=self.pool.request('GET','http://'+self.IP+'/pics/stream.jpg')
+            self.img=h.data
+            time.sleep(0.1)
           
     def show_stream(self):
          # init new window:
@@ -154,19 +161,18 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.uiw = self.Stream_Widget(self.IP,self.pool)
         uiw.setupUi(self.uiw)
         key=0  
+        Thread(target=self.stream_image, args=[]).start()
         self.uiw.show()
         while key!='q':
             try:
                 new_image=QtGui.QPixmap()
-                h=self.pool.request('GET','http://'+self.IP+'/pics/stream.jpg')
-                img=h.data
-                if new_image.loadFromData(img,'jpg'):
+                if new_image.loadFromData(self.img,'jpg'):
                     image=new_image
                 uiw.img_stream.setPixmap(image)  
             except:
                 print('couldnt load frame')       
             key=cv2.waitKey(300)
-            
+        
     def connect_to_master(self):
         #try to open database connection and look for users
         result=1
@@ -194,7 +200,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         #self.auth_http(self.authusr,self.authpwd)
         try: 
             #timeout = urllib3.util.timeout.Timeout(connect=0.5, read=0.1)
-            self.pool = urllib3.PoolManager(headers=urllib3.util.request.make_headers(keep_alive=True, accept_encoding=None, user_agent=None, basic_auth=self.authusr+':'+self.authpwd))
+            self.pool = urllib3.PoolManager(headers=urllib3.util.make_headers(keep_alive=True, accept_encoding=None, user_agent=None, basic_auth=self.authusr+':'+self.authpwd))
             domain='http://'+self.IP+'/index.html'
             self.open_website(domain)
             if result==2:
