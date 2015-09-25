@@ -3,6 +3,7 @@
 
 import sys
 import urllib2
+import urllib3
 import MySQLdb
 import urllib
 import platform
@@ -117,11 +118,12 @@ class ControlMainWindow(QtGui.QMainWindow):
         
     class Stream_Widget( QtGui.QWidget):
 
-        def __init__(self,IP):
+        def __init__(self,IP,pool):
             QtGui.QWidget.__init__(self)
             self.IP=IP
+            self.pool=pool
         def open_website(self,url):
-            return urllib2.urlopen(url)
+            return self.pool.request('GET',url)
 
         def send_speech(self,speech):
             try:
@@ -149,21 +151,21 @@ class ControlMainWindow(QtGui.QMainWindow):
     def show_stream(self):
          # init new window:
         uiw=Ui_webstream()
-        self.uiw = self.Stream_Widget(self.IP)
+        self.uiw = self.Stream_Widget(self.IP,self.pool)
         uiw.setupUi(self.uiw)
         key=0  
         self.uiw.show()
         while key!='q':
             try:
                 new_image=QtGui.QPixmap()
-                h=urllib2.urlopen('http://'+self.IP+'/pics/stream.jpg',timeout=0.1)
-                img=h.read()
+                h=self.pool.request('GET','http://'+self.IP+'/pics/stream.jpg')
+                img=h.data
                 if new_image.loadFromData(img,'jpg'):
                     image=new_image
                 uiw.img_stream.setPixmap(image)  
             except:
                 print('couldnt load frame')       
-            key=cv2.waitKey(500)
+            key=cv2.waitKey(300)
             
     def connect_to_master(self):
         #try to open database connection and look for users
@@ -189,8 +191,10 @@ class ControlMainWindow(QtGui.QMainWindow):
                 result = 2
         # try to connect and get data from the server
         # try to authenticate
-        self.auth_http(self.authusr,self.authpwd)
+        #self.auth_http(self.authusr,self.authpwd)
         try: 
+            #timeout = urllib3.util.timeout.Timeout(connect=0.5, read=0.1)
+            self.pool = urllib3.PoolManager(headers=urllib3.util.request.make_headers(keep_alive=True, accept_encoding=None, user_agent=None, basic_auth=self.authusr+':'+self.authpwd))
             domain='http://'+self.IP+'/index.html'
             self.open_website(domain)
             if result==2:
@@ -715,11 +719,11 @@ class ControlMainWindow(QtGui.QMainWindow):
                 combo_inter_type.addItem('|'+str(row[0])+'| '+str(row[1]))
 
     def open_website(self,url):
-        h=urllib2.urlopen(url)
-        message=h.read()
+        h=self.pool.request('GET', url)
+        message=h.data
         html_id=message.find('</html>')   
         message=message[html_id+9:].replace('\n', ' ').replace('\r', '') 
-        print(message)   
+        #print(message)   
         self.statusBar().showMessage(message)
 
     def send_speech(self,speech):

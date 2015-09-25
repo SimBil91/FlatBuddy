@@ -1,6 +1,5 @@
 <launch>
-<node name="recognition" pkg="budspeech" type="recognition.py" output="screen" />
-<node name="recognition_IP" pkg="budspeech" type="recognition_IP.py" output="screen" />
 <node name="NL_processor" pkg="budspeech" type="NL_processor.py" output="screen"/>
 <node name="cam_control" pkg="budspeech" type="cam_control.py" output="screen"/>
+<node name="control" pkg="budspeech" type="control.py" output="screen"/>
 </launch>
