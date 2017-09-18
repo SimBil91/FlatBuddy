@@ -18,13 +18,13 @@ https://www.youtube.com/watch?v=nf90v2eeZBo
 https://www.thingiverse.com/thing:2540428
 
 Parts list:
-Raspberry PI 3,
-8x8 LED matrix,
-3G USB-modem,
-Adafruit BMP180,
-IMU: MPU 6050,
-Mini USB microphone,
-Small Speaker
+- Raspberry PI 3,
+- 8x8 LED matrix,
+- 3G USB-modem,
+- Adafruit BMP180,
+- IMU: MPU 6050,
+- Mini USB microphone,
+- Small Speaker
 
 If you are interested to contribute please contact me.
 
