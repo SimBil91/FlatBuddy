@@ -1,8 +1,8 @@
 # FlatBuddy / TravelBuddy
-## Alpha Status! 
-HOME AUTOMATION System based on open source software and low cost hardware.
+### Alpha Status! 
 
-FlatBuddy changed to TravelBuddy. A 3D printed companion based on a Raspberry PI 3 you can take e.g. in your car.
+FlatBuddy changed to TravelBuddy. 
+A 3D printed speech enabled companion based on a Raspberry PI 3 you can take e.g. in your car.
 
 The system is based on ROS and makes use of open source APIs for:
 Weather (pywapi),
