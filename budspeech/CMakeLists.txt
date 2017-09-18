@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   message_generation
   std_msgs
+  geometry_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -47,7 +48,13 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
    FILES
    speech.msg
- )
+   imu_data.msg
+   imu_event.msg
+   pressure_event.msg
+   temp_pressure_data.msg
+   disp_emotion.msg
+   disp_action.msg
+)
 
 ## Generate services in the 'srv' folder
 # add_service_files(
@@ -67,6 +74,7 @@ find_package(catkin REQUIRED COMPONENTS
  generate_messages(
    DEPENDENCIES
    std_msgs  # Or other packages containing msgs
+   geometry_msgs
 )
 
 ###################################

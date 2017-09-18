@@ -6,57 +6,93 @@
 # private key: AIzaSyD_RN5bb7QvX5YEHg5nWT2Q2D3PWA9dWwE
 import speech_recognition as sr
 import rospy
+import time
 from budspeech.msg import speech
-
-# Edit parameters
-#r = sr.Recognizer(language = "en-US", key = "AIzaSyD_RN5bb7QvX5YEHg5nWT2Q2D3PWA9dWwE")
-#r.pause_threshold = 0.8
-#r.record(source, duration = None)
-#r.listen(source, timeout = None)
-#r.recognize(audio_data, show_all = False)
 from std_srvs.srv import Empty
-rec_state=0
 
-def enable_recognition(state):
-    global rec_state
-    rec_state=1
-    return []
+class recognition_node(object):
+    def __init__(self):
+        self.rec_state=1
+        self.hot_word="buddy"
+        # Init node
+        rospy.init_node('recognition')
+        # init Publisher
+        self.pub = rospy.Publisher('speech', speech,queue_size=100)
+        # init Service
+        s_en = rospy.Service('enable_recognition', Empty, self.enable_recognition)
+        s_dis = rospy.Service('disable_recognition', Empty, self.disable_recognition)
+        self.init_recognition()
+        self.rec_local=True
+        self.recognition_time=time.time()-100000
+        self.time_without_detection=60
 
-def disable_recognition(state):
-    global rec_state
-    rec_state=0
-    return []
+    def init_recognition(self):
+        r = sr.Recognizer()
+        r.dynamic_energy_threshold = False
+        m = sr.Microphone()
+        with m as source:
+            r.adjust_for_ambient_noise(source)  # we only need to calibrate once, before we start listening
+            #r.energy_threshold = 100 # microphone dependent
+            #perform listining and recognizing
+        # start recognition
+        self.stop_listen=r.listen_in_background(m, self.callback)
+    def enable_recognition(self,state):
+        self.rec_state=1
+        return []
+
+    def disable_recognition(self,state):
+        self.rec_state=0
+        return []
+
+    def spin(self):
+        rate = rospy.Rate(10) 
+        while not rospy.is_shutdown():
+            rate.sleep()
 
 
-def callback(recognizer, audio):                          # this is called from the background thread
-    global rec_state
-    try:
-            # listen for the first phrase and extract it into audio data
-        if rec_state==1:
-            message = speech()
-            result = recognizer.recognize(audio, True)
-            message.text=str(result[0]['text'])
-            message.confidence=result[0]['confidence']
-            message.interface_id=1
-            pub.publish(message)
-            rospy.loginfo(result) 
+    def callback(self,recognizer, audio):                          # this is called from the background thread
+        if self.rec_state==1:
+            try:
+                # listen for the first phrase and extract it into audio data
+                print("processing data..")
+                if (time.time()-self.recognition_time<self.time_without_detection):
+                    self.rec_local=False
+                else:
+                    self.rec_local=True
+                if (self.rec_local):
+                    hot_word_res=recognizer.recognize_sphinx(audio, keyword_entries=[(self.hot_word, 1)])
+                    print("local recognition")
+                else:
+                    hot_word_res=self.hot_word
+                if any(self.hot_word in s for s in hot_word_res.split()):
+                    try:
+                        result = recognizer.recognize_google(audio)
+                        message = speech()
+                        message.text=str(result)
+                        message.confidence=1
+                        message.interface_id=1
+                        self.pub.publish(message)
+                        rospy.loginfo(result)
+                        if any(self.hot_word in u for u in message.text.split()):
+                            self.recognition_time=time.time()
+                    except sr.UnknownValueError:
+                        print("Google Speech Recognition could not understand audio")
+                    except sr.RequestError as e:
+                        print("Could not request results from Google Speech Recognition service; {0}".format(e))
+                   
+            except sr.UnknownValueError:
+                print("Hot word not detected!")
+            except sr.RequestError as e:
+                print("Could not request results from Google Speech Recognition service; {0}".format(e))
+
         else:
             print('Recognition disabled')
-    except LookupError as e:
-        rospy.loginfo("Could not understand sentence!") 
+        
+    
 
 
 if __name__ == '__main__':
-    # Init node
-    rospy.init_node('recognition')
-    # init Publisher
-    pub = rospy.Publisher('speech', speech)
-    # init Service
-    s_en = rospy.Service('enable_recognition', Empty, enable_recognition)
-    s_dis = rospy.Service('disable_recognition', Empty, disable_recognition)
-    r = sr.Recognizer()
-    r.energy_threshold = 2000 # microphone dependent
-    # perform listining and recognizing
-    r.listen_in_background(sr.Microphone(), callback)
+    rec=recognition_node()
+    rec.spin()
 
 

@@ -23,7 +23,7 @@ from master_ip import *
 from webstream import *
 import yaml
 import rospkg
-import cv2
+#import cv2
 import time
 
 rospack = rospkg.RosPack()
@@ -50,12 +50,12 @@ class ControlMainWindow(QtGui.QMainWindow):
         # define Button events
         self.ui.but_send_com.clicked.connect(lambda: self.send_speech(self.ui.line_speech.text()))
         self.ui.line_speech.returnPressed.connect(lambda: self.send_speech(self.ui.line_speech.text()))
-        self.ui.but_open_stream.clicked.connect(self.show_stream) 
+        self.ui.but_open_stream.clicked.connect(self.show_stream)
         if not self.remote:
-            self.ui.but_new_object.clicked.connect(self.new_object) 
-            self.ui.but_new_socket.clicked.connect(self.new_socket) 
-            self.ui.but_new_room.clicked.connect(self.new_room) 
-            self.ui.but_new_interface.clicked.connect(self.new_inter) 
+            self.ui.but_new_object.clicked.connect(self.new_object)
+            self.ui.but_new_socket.clicked.connect(self.new_socket)
+            self.ui.but_new_room.clicked.connect(self.new_room)
+            self.ui.but_new_interface.clicked.connect(self.new_inter)
             # Check if camera defined
             Inter_types=self.get_all_inter_types()
             ipcam_id=[item[0] for item in Inter_types if item[1] == 'IPCAM'][0]
@@ -71,8 +71,8 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.ui.actionExit.triggered.connect(self.destroy)
         # don't show the socket buttons in remote mode
         if not self.remote:
-            # generate socket buttons, which indicate the state and if reachable  
-            self.ui.layout_buttons.addStretch(1) 
+            # generate socket buttons, which indicate the state and if reachable
+            self.ui.layout_buttons.addStretch(1)
             all_socs=self.get_all_sockets()
             self.ui.button_group=QtGui.QButtonGroup(self.ui.layout_buttons)
             buttons=[]
@@ -93,14 +93,14 @@ class ControlMainWindow(QtGui.QMainWindow):
                 else:
                     button.setStyleSheet('QPushButton {background-color: grey; color: white;}')
                 self.ui.button_group.addButton(button,socket[0])
-                buttons.append(button) 
+                buttons.append(button)
                 states.append(state)
                 ids.append(socket[0])
                 i=i+1
                 self.ui.layout_buttons.addWidget(button)
-            # set action 
-            self.ui.button_group.buttonClicked.connect(self.switch_socket) 
-            self.ui.layout_buttons.addStretch(1)  
+            # set action
+            self.ui.button_group.buttonClicked.connect(self.switch_socket)
+            self.ui.layout_buttons.addStretch(1)
             # add current objects to listWidget
             # read all
             self.update_obj_items()
@@ -115,8 +115,8 @@ class ControlMainWindow(QtGui.QMainWindow):
         else:
             self.ui.but_open_stream.setEnabled(True)
             self.ui.tab_control.removeTab(self.ui.tab_control.indexOf(self.ui.tab_4))
-        self.show()  
-        
+        self.show()
+
     class Stream_Widget( QtGui.QWidget):
 
         def __init__(self,IP,pool):
@@ -131,13 +131,13 @@ class ControlMainWindow(QtGui.QMainWindow):
                 fullurl = 'http://'+self.IP+'/cgi-bin/send.py?speech='+str(speech)
                 fullurl = urllib.quote(fullurl, safe="%/:=&?~#+!$,;'@()*[]")
                 Thread(target=self.open_website, args=[fullurl]).start()
-            except: 
+            except:
                 print('Cannot move camera')
-            
+
         def keyPressEvent(self, event):
 
             key = event.key()
-            
+
             if key == QtCore.Qt.Key_Left:
                 self.send_speech('move camera left')
             elif key == QtCore.Qt.Key_Right:
@@ -148,19 +148,19 @@ class ControlMainWindow(QtGui.QMainWindow):
                 self.send_speech('move camera up')
             else:
                 QtGui.QWidget.keyPressEvent(self, event)
-    
+
     def stream_image(self):
         while 1:
             h=self.pool.request('GET','http://'+self.IP+'/pics/stream.jpg')
             self.img=h.data
             time.sleep(0.1)
-          
+
     def show_stream(self):
          # init new window:
         uiw=Ui_webstream()
         self.uiw = self.Stream_Widget(self.IP,self.pool)
         uiw.setupUi(self.uiw)
-        key=0  
+        key=0
         Thread(target=self.stream_image, args=[]).start()
         self.uiw.show()
         while key!='q':
@@ -168,16 +168,17 @@ class ControlMainWindow(QtGui.QMainWindow):
                 new_image=QtGui.QPixmap()
                 if new_image.loadFromData(self.img,'jpg'):
                     image=new_image
-                uiw.img_stream.setPixmap(image)  
+                uiw.img_stream.setPixmap(image)
             except:
-                print('couldnt load frame')       
+                print('couldnt load frame')
             key=cv2.waitKey(300)
-        
+
     def connect_to_master(self):
         #try to open database connection and look for users
         result=1
         if not self.remote:
-            try: 
+            try:
+                self.init_database()
                 db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
                 cursor = db.cursor()
                 cursor.execute("SELECT usr FROM interfaces")
@@ -198,7 +199,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         # try to connect and get data from the server
         # try to authenticate
         #self.auth_http(self.authusr,self.authpwd)
-        try: 
+        try:
             #timeout = urllib3.util.timeout.Timeout(connect=0.5, read=0.1)
             self.pool = urllib3.PoolManager(headers=urllib3.util.make_headers(keep_alive=True, accept_encoding=None, user_agent=None, basic_auth=self.authusr+':'+self.authpwd))
             domain='http://'+self.IP+'/index.html'
@@ -211,7 +212,7 @@ class ControlMainWindow(QtGui.QMainWindow):
             QtGui.QMessageBox.warning(self, 'Server', 'Authentification failure!')
             result = 0
         return result
-        
+
     def auth_http(self,user, pwd):
         passman = urllib2.HTTPPasswordMgrWithDefaultRealm()
         # this creates a password manager
@@ -220,7 +221,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         # create the AuthHandler
         opener = urllib2.build_opener(authhandler)
         urllib2.install_opener(opener)
-        
+
     def init_database(self):
     # create all necessary tables
         db = MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -231,14 +232,21 @@ class ControlMainWindow(QtGui.QMainWindow):
         cursor.execute('''CREATE TABLE IF NOT EXISTS rooms(id INT PRIMARY KEY AUTO_INCREMENT, name TEXT)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS interface_types(id INT PRIMARY KEY, type TEXT)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS interfaces(id INT PRIMARY KEY AUTO_INCREMENT, IP TEXT, inter_type INT, room INT, usr TEXT, pwd TEXT)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS data(id INT PRIMARY KEY AUTO_INCREMENT, type INT, value REAL, time TIMESTAMP)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS data_types(id INT PRIMARY KEY AUTO_INCREMENT, type TEXT)''')
         db.commit();
     # insert hardcoded entries
         cursor.execute('''INSERT IGNORE INTO interface_types(id,type) VALUES(%s,%s)''', (1,'MASTER'))
         cursor.execute('''INSERT IGNORE INTO interface_types(id,type) VALUES(%s,%s)''', (2,'IPCAM'))
         cursor.execute('''INSERT IGNORE INTO interfaces(id,inter_type) VALUES(%s,%s)''', (1,1))
+        cursor.execute('''INSERT IGNORE INTO data_types(id,type) VALUES(%s,%s)''', (1,'temperature'))
+        cursor.execute('''INSERT IGNORE INTO data_types(id,type) VALUES(%s,%s)''', (2,'altitude'))
+        cursor.execute('''INSERT IGNORE INTO data_types(id,type) VALUES(%s,%s)''', (3,'door_event'))
+        cursor.execute('''INSERT IGNORE INTO data_types(id,type) VALUES(%s,%s)''', (4,'imu_event'))
+
         db.commit();
         db.close();
-        
+
     def ask_for_master(self):
         self.hide()
         uim=Ui_master_ip()
@@ -252,17 +260,17 @@ class ControlMainWindow(QtGui.QMainWindow):
         uim.line_auth_pwd.setText(self.authpwd)
         uim.line_auth_usr.setText(self.authusr)
         uim.check_remote.stateChanged.connect(lambda: self.switch_remote([uim.check_remote.isChecked()]))
-        # button actions 
+        # button actions
         uim.but_quit_master.clicked.connect(self.uim.destroy)
         uim.but_save_master.clicked.connect(lambda: self.save_yaml([uim.line_master_IP.text(),uim.line_auth_usr.text(),uim.line_auth_pwd.text(),uim.line_master_usr.text(),uim.line_master_pwd.text()]))
         self.uim.show()
-        
+
     def switch_remote (self,state):
         if state[0]:
             self.remote=True
         else:
             self.remote=False
-        
+
     def save_yaml(self,data):
         self.IP=data[0]
         self.authusr=data[1]
@@ -277,7 +285,7 @@ class ControlMainWindow(QtGui.QMainWindow):
                 outfile.write( yaml.dump(write_data, default_flow_style=True) )
             self.uim.close()
             self.init_main()
-    
+
     def load_yaml(self):
             try:
                 with open(path+'/src/master.yml', 'r') as readfile:
@@ -285,29 +293,29 @@ class ControlMainWindow(QtGui.QMainWindow):
                     return [data['IP'],data['usr'],data['pwd'],data['authusr'],data['authpwd']]
             except:
                 return ['','','','','']
-            
+
     def get_obj_type(self, id):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         # get values for item
-        try:        
+        try:
             cursor.execute("SELECT type FROM objects WHERE id = %s", (str(id),))
             type = cursor.fetchall()[0][0]
             db.close()
             return type
         except:
             return 'error'
-    
+
     ## Update/Refresh TAB items
     def update_obj_items(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
-        cursor = db.cursor()  
+        cursor = db.cursor()
         self.ui.list_objects.clear()
         all_objects,all_tasks=self.get_all_objects()
         for row in all_objects:
             tasks=''
             cursor.execute("SELECT name FROM rooms WHERE id=%s", (str(row[2]),))
-            room_name = cursor.fetchall() 
+            room_name = cursor.fetchall()
             for task in all_tasks:
                 if task[1]==row[0]:
                     tasks=tasks+task[2]+', '
@@ -320,22 +328,22 @@ class ControlMainWindow(QtGui.QMainWindow):
         all_sockets=self.get_all_sockets()
         for row in all_sockets:
             QtGui.QListWidgetItem('|'+str(row[0])+'| object: '+str(row[1])+', IP: '+str(row[2]), self.ui.list_sockets)
-    
+
     def update_room_items(self):
         self.ui.list_rooms.clear()
         all_rooms=self.get_all_rooms()
         for row in all_rooms:
             QtGui.QListWidgetItem('|'+str(row[0])+'| '+str(row[1]), self.ui.list_rooms)
-    
+
     def update_inter_items(self):
         # get room and interface_types names
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
-        cursor = db.cursor()         
+        cursor = db.cursor()
         self.ui.list_interfaces.clear()
         all_inter=self.get_all_inter()
         for row in all_inter:
             cursor.execute("SELECT type FROM interface_types WHERE id=%s", (str(row[2]),))
-            inter_type = cursor.fetchall() 
+            inter_type = cursor.fetchall()
             try:
                 cursor.execute("SELECT name FROM rooms WHERE id=%s", (str(row[3]),))
                 room_name = cursor.fetchall() [0][0]
@@ -345,52 +353,52 @@ class ControlMainWindow(QtGui.QMainWindow):
         # close DB
         db.close()
 
-    ## GET all items of TABs            
+    ## GET all items of TABs
     def get_all_objects(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         cursor.execute("SELECT id, type,room, location, how FROM objects")
-        all_objects = cursor.fetchall() 
+        all_objects = cursor.fetchall()
         cursor.execute("SELECT id, objectID, modification FROM mods")
-        all_tasks = cursor.fetchall() 
+        all_tasks = cursor.fetchall()
         # close DB
-        db.close()   
+        db.close()
         return all_objects,all_tasks
-    
+
     def get_all_sockets(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         cursor.execute("SELECT id, objectID, IP FROM sockets")
-        all_sockets = cursor.fetchall() 
+        all_sockets = cursor.fetchall()
         # close DB
-        db.close()   
+        db.close()
         return all_sockets
 
     def get_all_rooms(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         cursor.execute("SELECT id, name FROM rooms")
-        all_rooms = cursor.fetchall() 
+        all_rooms = cursor.fetchall()
         # close DB
-        db.close()   
+        db.close()
         return all_rooms
 
     def get_all_inter(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         cursor.execute("SELECT id, IP, inter_type, room,usr,pwd FROM interfaces")
-        all_inter = cursor.fetchall() 
+        all_inter = cursor.fetchall()
         # close DB
-        db.close()   
+        db.close()
         return all_inter
 
     def get_all_inter_types(self):
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         cursor.execute("SELECT id, type FROM interface_types")
-        all_inter_types = cursor.fetchall() 
+        all_inter_types = cursor.fetchall()
         # close DB
-        db.close()   
+        db.close()
         return all_inter_types
 
     # Create new item:
@@ -417,7 +425,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uins.but_cancel_soc.clicked.connect(self.uins.close)
         uins.but_create_soc.clicked.connect(lambda: self.create_new_socket([self.read_combo_id(uins.combo_soc_new),uins.line_soc_IP.text()]))
         self.uins.show()
-    
+
     def new_room(self):
         # init new window:
         uinr=Ui_new_room()
@@ -427,7 +435,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uinr.but_cancel_room.clicked.connect(self.uinr.close)
         uinr.but_create_room.clicked.connect(lambda: self.create_new_room([uinr.line_room_name.text()]))
         self.uinr.show()
-        
+
     def new_inter(self):
         # init new window:
         uini=Ui_new_interface()
@@ -456,7 +464,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         db.close()
         self.update_obj_items()
         self.uin.close()
-   
+
     def create_new_socket(self,data):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -478,7 +486,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         db.close()
         self.update_room_items()
         self.uinr.close()
-    
+
     def create_new_inter(self,data):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -521,7 +529,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uic.but_upd_obj.clicked.connect(lambda: self.update_object([id,uic.line_obj_type.text(),self.read_combo_id(uic.com_obj_room),uic.line_obj_loc.text(),uic.line_obj_how.text(),uic.line_obj_tasks.text()]))
         uic.but_del_obj.clicked.connect(lambda: self.delete_object(id))
         # close DB
-        db.close()   
+        db.close()
         self.uicw.show()
 
     def change_socket(self,curr):
@@ -546,7 +554,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uis.but_update_soc.clicked.connect(lambda: self.update_socket([id,self.read_combo_id(uis.combo_soc),uis.line_soc_IP.text()]))
         uis.but_del_soc.clicked.connect(lambda: self.delete_socket(id))
         # close DB
-        db.close()   
+        db.close()
         self.uis.show()
 
     def change_room(self,curr):
@@ -569,9 +577,9 @@ class ControlMainWindow(QtGui.QMainWindow):
         uir.but_upd_room.clicked.connect(lambda: self.update_room([id,uir.line_room_name.text()]))
         uir.but_del_room.clicked.connect(lambda: self.delete_room(id))
         # close DB
-        db.close()   
+        db.close()
         self.uir.show()
-    
+
     def change_inter(self,curr):
         # init new window:
         id=int(curr.text().split()[0][1:-1]) # extract id from string
@@ -605,7 +613,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         uii.but_upd_inter.clicked.connect(lambda: self.update_inter([id,self.read_combo_id(uii.com_inter_room),self.read_combo_id(uii.com_inter_type),uii.line_inter_IP.text(),uii.lin_inter_usr.text(),uii.lin_inter_pwd.text()]))
         uii.but_del_inter.clicked.connect(lambda: self.delete_inter(id))
         # close DB
-        db.close()   
+        db.close()
         self.uii.show()
 
     def update_object(self,data):
@@ -614,7 +622,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         cursor = db.cursor()
         cursor.execute("UPDATE objects SET type = %s, room = %s, location = %s, how = %s WHERE id = %s", (data[1],data[2],data[3],data[4],data[0]))
         db.commit()
-        # drop all tasks 
+        # drop all tasks
         cursor.execute("DELETE FROM mods WHERE objectID = %s", (data[0],))
         db.commit()
         for task in data[5].split(', '):
@@ -635,7 +643,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         db.close()
         self.update_soc_items()
         self.uis.close()
-        
+
     def update_room(self,data):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -646,7 +654,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         db.close()
         self.update_room_items()
         self.uir.close()
-        
+
     def update_inter(self,data):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -657,7 +665,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         db.close()
         self.update_inter_items()
         self.uii.close()
-          
+
     ## delete item:
     def delete_object(self,id):
         # connect db
@@ -679,7 +687,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.update_soc_items()
         db.close()
         self.uis.close()
-    
+
     def delete_room(self,id):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -689,7 +697,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.update_room_items()
         db.close()
         self.uir.close()
-    
+
     def delete_inter(self,id):
         # connect db
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
@@ -699,7 +707,7 @@ class ControlMainWindow(QtGui.QMainWindow):
         self.update_inter_items()
         db.close()
         self.uii.close()
-    
+
     ## Combo boxes:
     def read_combo_id(self,combo_soc):
         try:
@@ -727,9 +735,9 @@ class ControlMainWindow(QtGui.QMainWindow):
     def open_website(self,url):
         h=self.pool.request('GET', url)
         message=h.data
-        html_id=message.find('</html>')   
-        message=message[html_id+9:].replace('\n', ' ').replace('\r', '') 
-        #print(message)   
+        html_id=message.find('</html>')
+        message=message[html_id+9:].replace('\n', ' ').replace('\r', '')
+        #print(message)
         self.statusBar().showMessage(message)
 
     def send_speech(self,speech):
@@ -738,17 +746,17 @@ class ControlMainWindow(QtGui.QMainWindow):
             fullurl = urllib.quote(fullurl, safe="%/:=&?~#+!$,;'@()*[]")
             self.open_website(fullurl)
             #self.statusBar().showMessage('Message sent')
-            self.ui.line_speech.setText('') 
+            self.ui.line_speech.setText('')
         except:
             self.statusBar().showMessage('cannot reach server')
-        
+
     def get_state_socket(self,id):
         #switch state of socket
         db= MySQLdb.connect(self.IP,self.usr,self.pwd,'FB')
         cursor = db.cursor()
         cursor.execute("SELECT IP FROM sockets WHERE id = %s",(str(id),))
         IP=list(sum(cursor.fetchall(), ()))  # generate from object list
-        db.close()    
+        db.close()
         try:
             state=urllib2.urlopen('http://'+IP[0]+'/cgi-bin/turn.cgi?state',timeout=0.8)
             return int(state.read())
@@ -773,14 +781,14 @@ class ControlMainWindow(QtGui.QMainWindow):
             button.setStyleSheet('QPushButton {background-color: green; color: white;}')
         else:
             self.statusBar().showMessage('Socket cannot be reached!')
-        db.close() 
+        db.close()
     def show_about(self):
         QtGui.QMessageBox.about(self, "About",
         """<b>FlatBUDDY - Control</b> v %s
         <p>Copyright 2015 Simon Bilgeri.
         All rights reserved in accordance with
         GPL v2 or later - NO WARRANTIES!
-        <p>This application can be used to monitor and change the status of the FlatBUDDY system 
+        <p>This application can be used to monitor and change the status of the FlatBUDDY system
         aswell as interact with it.
         <p>Python %s -  PySide version %s - Qt version %s on %s""" % (__version__,
         platform.python_version(), PySide.__version__,  PySide.QtCore.__version__,

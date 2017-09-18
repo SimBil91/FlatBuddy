@@ -185,10 +185,10 @@ def speak(sentence,background=0):
     print('Says: '+sentence)
     if (sender['type']=='MASTER'):
         if background:
-            os.system('echo \"'+sentence+'\" | festival --tts &')
+            os.system("pico2wave -w out.wav \""+sentence+"\" && aplay -D hw out.wav &")
         else:
             disable_rec()
-            os.system('echo \"'+sentence+'\" | festival --tts')
+            os.system("pico2wave -w out.wav \""+sentence+"\" && aplay -D hw out.wav")
             rospy.sleep(0.7)
             enable_rec()
     elif sender['type']=='IPCAM':

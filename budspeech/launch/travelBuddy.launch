@@ -1,0 +1,7 @@
+<launch>
+<node name="recognition" pkg="budspeech" type="recognition.py" output="screen"/>
+<node name="disp" pkg="budspeech" type="disp.py" output="screen"/>
+<node name="socketio_wrapper" pkg="budspeech" type="socketio_wrapper.py" output="screen"/>
+<node name="temp_pressure" pkg="budspeech" type="temp_pressure.py" output="screen"/>
+<node name="brain" pkg="budspeech" type="brain.py" output="screen"/>
+</launch>

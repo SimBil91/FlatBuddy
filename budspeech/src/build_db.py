@@ -6,11 +6,14 @@
 import MySQLdb
 
 #Open database connection
-db = MySQLdb.connect('192.168.178.28','Buddy','Penner12','FB')
+db = MySQLdb.connect('127.0.0.1','buddy','travel','FB')
 cursor = db.cursor()
 cursor.execute('''CREATE TABLE IF NOT EXISTS objects(id INT PRIMARY KEY AUTO_INCREMENT, type TEXT,room TEXT, location TEXT, how TEXT)''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS sockets(id INT PRIMARY KEY AUTO_INCREMENT, objectID INT, IP TEXT, state INT)''')
 cursor.execute('''CREATE TABLE IF NOT EXISTS mods(id INT PRIMARY KEY AUTO_INCREMENT, objectID INT, modification TEXT)''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS data(id INT PRIMARY KEY AUTO_INCREMENT, type INT, value REAL)''')
+cursor.execute('''CREATE TABLE IF NOT EXISTS data_types(id INT PRIMARY KEY AUTO_INCREMENT, type TEXT)''')
+
 db.commit();
 db.close();
 
