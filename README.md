@@ -1,33 +1,31 @@
-# FlatBuddy
+# FlatBuddy / TravelBuddy
 ## Alpha Status! 
 HOME AUTOMATION System based on open source software and low cost hardware.
 
-Prerequesites:
-Install following Ubuntu packages: sudo apt-get install python-pip, ros-indigo-desktop-full, lighttpd, mysql-server mysql-client, festival
+FlatBuddy changed to TravelBuddy. A 3D printed companion based on a Raspberry PI 3 you can take e.g. in your car.
 
-Install following python packages: sudo pip install SpeechRecognition, nltk, beautifulsoup4, wolframalpha, MySQL-python
+The system is based on ROS and makes use of open source APIs for:
+Weather (pywapi),
+Knowledge (wolframalpha),
+Speech Recognition,
+Music (Spotify)
+and more.
 
-Install pywapi: https://code.google.com/p/python-weather-api/
+Check out the video:
+https://www.youtube.com/watch?v=nf90v2eeZBo
 
-If you used sudo to install with pip: change permissions of SpeechRecognition python library:
-Ubuntu Trusty: sudo chown -R username /usr/local/lib/python2.7/dist-packages/speech_recognition/  
+3D Files for the case:
+https://www.thingiverse.com/thing:2540428
 
-SETUP Nltk:
-type: python  
-import nltk  
-nltk.download()  
---> download model: Punkt tokenizer models
+Parts list:
+Raspberry PI 3,
+8x8 LED matrix,
+3G USB-modem,
+Adafruit BMP180,
+IMU: MPU 6050,
+Mini USB microphone,
+Small Speaker
 
-SETUP your web and mysql server:
-mysql:
-- login as root: mýsql -u root -p
-- create new user: CREATE USER 'username' IDENTIFIED BY 'password';
-- create dB 'FB': CREATE DATABASE FB;
-- grant rights: GRANT ALL PRIVILEGES ON FB. * TO 'username'@'%' IDENTIFIED BY 'password'
+If you are interested to contribute please contact me.
 
 
-Now you should be ready to go!!
-
-The system is currently composed of a master laptop (brain), IP Cam (Tenvis HD), Kaikun Smart Plugs.
-Feel free to contribute to the project in adding more supported devices!
-For the Tenvis HD camera I've also written a python library, which can be found here.
