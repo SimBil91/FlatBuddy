@@ -5,11 +5,11 @@ FlatBuddy changed to TravelBuddy.
 A 3D printed speech enabled companion based on a Raspberry PI 3 you can take e.g. in your car.
 
 The system is based on ROS and makes use of open source APIs for:
-Weather (pywapi),
-Knowledge (wolframalpha),
-Speech Recognition,
-Music (Spotify)
-and more.
+- Weather (pywapi),
+- Knowledge (wolframalpha),
+- Speech Recognition,
+- Music (Spotify)
+- and more.
 
 Check out the video:
 https://www.youtube.com/watch?v=nf90v2eeZBo
