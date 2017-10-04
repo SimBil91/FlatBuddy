@@ -36,8 +36,8 @@ class display_node(object):
 
         # Init services
         s_dis = rospy.Service('stop_disp', Empty, self.stop_disp)
-        s_dis = rospy.Service('inc_proc', Empty, self.increase_processing_count)
-        s_dis = rospy.Service('dec_proc', Empty, self.decrease_processing_count)
+        i_proc = rospy.Service('inc_proc', Empty, self.increase_processing_count)
+        dec_proc = rospy.Service('dec_proc', Empty, self.decrease_processing_count)
 
         self.display_anim=False
 
@@ -74,7 +74,7 @@ class display_node(object):
 
     def action(self,data):
         action_type=data.type
-        self.stop_disp()
+        self.stop_disp(False)
         if (action_type==disp_action.MUSIC):
             with canvas(self.device) as draw:
                 text(draw, (0, 0), chr(14), fill="white")
