@@ -61,6 +61,8 @@ class recognition_node(object):
             try:
                 # listen for the first phrase and extract it into audio data
                 print("processing data..")
+                self.inc_proc()
+
                 if (time.time()-self.recognition_time<self.time_without_detection):
                     self.rec_local=False
                     self.lrec()
@@ -68,7 +70,6 @@ class recognition_node(object):
                     self.rec_local=True
                     self.grec()
                 if (self.rec_local):
-                    self.inc_proc()
                     hot_word_res=recognizer.recognize_sphinx(audio, keyword_entries=[(self.hot_word, 1)])
                     self.dec_proc()
                     print("local recognition")
@@ -76,6 +77,7 @@ class recognition_node(object):
                     hot_word_res=self.hot_word
                 if any(self.hot_word in s for s in hot_word_res.split()):
                     try:
+
                         result = recognizer.recognize_google(audio)
                         message = speech()
                         message.text=str(result)
@@ -83,11 +85,15 @@ class recognition_node(object):
                         message.interface_id=1
                         self.pub.publish(message)
                         rospy.loginfo(result)
+                        self.dec_proc()
+
                         if any(self.hot_word in u for u in message.text.split()):
                             self.recognition_time=time.time()
                     except sr.UnknownValueError:
+                        self.dec_proc()
                         print("Google Speech Recognition could not understand audio")
                     except sr.RequestError as e:
+                        self.dec_proc()
                         print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
             except sr.UnknownValueError:
