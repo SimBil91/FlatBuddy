@@ -28,7 +28,7 @@ class display_node(object):
         self.shift_counter=0
         self.peak_counter=3
         self.processing_count=0
-        self.show_grec_bool=True
+        self.show_grec_bool=False
         print("Created device")
         # Init Subscribers
         rospy.Subscriber("disp/text", String, self.show_text_message)
@@ -49,12 +49,12 @@ class display_node(object):
         return []
 
     def show_grec(self,state):
-        self.show_lrec=True
+        self.show_grec_bool=True
         return []
 
 
     def show_lrec(self,state):
-        self.show_lrec=False
+        self.show_grec_bool=False
         return []
 
 
