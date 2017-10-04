@@ -92,7 +92,7 @@ class display_node(object):
             self.disable_disp()
 
 
-        if (action_type==disp_action.PROCESSING):
+        if (action_type==disp_action.PROCESSING and self.display_anim==False):
             self.display_anim=True
             while(self.display_anim):
                 for image in [1,2,3,2]:
