@@ -71,7 +71,6 @@ class recognition_node(object):
                     self.grec()
                 if (self.rec_local):
                     hot_word_res=recognizer.recognize_sphinx(audio, keyword_entries=[(self.hot_word, 1)])
-                    self.dec_proc()
                     print("local recognition")
                 else:
                     hot_word_res=self.hot_word
