@@ -59,8 +59,8 @@ class display_node(object):
 
     def draw_processing_count(self):
         if not self.display_anim:
-            for i in range(0,self.processing_count):
-                with canvas(self.device) as draw:
+            with canvas(self.device) as draw:
+                for i in range(0,self.processing_count):
                     draw.point((0,i), fill="white")
 
     def show_text_message(self,data):
@@ -74,6 +74,7 @@ class display_node(object):
 
     def action(self,data):
         action_type=data.type
+        self.stop_disp()
         if (action_type==disp_action.MUSIC):
             with canvas(self.device) as draw:
                 text(draw, (0, 0), chr(14), fill="white")
