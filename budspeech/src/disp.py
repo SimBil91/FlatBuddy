@@ -45,12 +45,12 @@ class display_node(object):
         self.display_anim=False
         return []
 
-    def decrease_processing_count(self):
+    def decrease_processing_count(self,state):
         self.processing_count=self.processing_count-1
 
 
 
-    def increase_processing_count(self):
+    def increase_processing_count(self,state):
         self.processing_count=self.processing_count+1
 
     def draw_processing_count(self):
