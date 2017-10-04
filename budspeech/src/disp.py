@@ -71,6 +71,7 @@ class display_node(object):
 
 
     def draw_processing_count(self):
+        print(self.processing_count)
         if not self.display_anim:
             with canvas(self.device) as draw:
                 for i in range(0,self.processing_count):
