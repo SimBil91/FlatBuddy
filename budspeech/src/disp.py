@@ -28,6 +28,7 @@ class display_node(object):
         self.shift_counter=0
         self.peak_counter=3
         self.processing_count=0
+        self.show_grec=True
         print("Created device")
         # Init Subscribers
         rospy.Subscriber("disp/text", String, self.show_text_message)
@@ -38,12 +39,20 @@ class display_node(object):
         s_dis = rospy.Service('stop_disp', Empty, self.stop_disp)
         i_proc = rospy.Service('inc_proc', Empty, self.increase_processing_count)
         dec_proc = rospy.Service('dec_proc', Empty, self.decrease_processing_count)
+        show_grec = rospy.Service('show_grec', Empty, self.show_grec)
+        show_lrec = rospy.Service('show_lrec', Empty, self.show_lrec)
 
         self.display_anim=False
 
     def stop_disp(self,state):
         self.display_anim=False
         return []
+
+    def show_grec(self):
+        self.show_grec=True
+
+    def show_lrec(self):
+        self.show_lrec=False
 
     def decrease_processing_count(self,state):
         self.processing_count=self.processing_count-1
@@ -61,7 +70,11 @@ class display_node(object):
         if not self.display_anim:
             with canvas(self.device) as draw:
                 for i in range(0,self.processing_count):
-                    draw.point((0,i), fill="white")
+                    if self.show_grec:
+                        draw.point((7,7-i), fill="white")
+                    else:
+                        draw.point((0,i), fill="white")
+
 
     def show_text_message(self,data):
          msg = data.data
@@ -92,7 +105,7 @@ class display_node(object):
             self.disable_disp()
 
 
-        if (action_type==disp_action.PROCESSING and self.display_anim==False):
+        if (action_type==disp_action.PROCESSING):
             self.display_anim=True
             while(self.display_anim):
                 for image in [1,2,3,2]:

@@ -9,7 +9,6 @@ import rospy
 import time
 from budspeech.msg import speech
 from std_srvs.srv import Empty
-from budspeech.msg import disp_action
 
 
 class recognition_node(object):
@@ -25,13 +24,12 @@ class recognition_node(object):
         s_dis = rospy.Service('disable_recognition', Empty, self.disable_recognition)
         self.inc_proc=rospy.ServiceProxy('inc_proc', Empty)
         self.dec_proc=rospy.ServiceProxy('dec_proc', Empty)
-        self.stop_disp=rospy.ServiceProxy('stop_disp', Empty)
-
+        self.grec=rospy.ServiceProxy('show_grec', Empty)
+        self.lrec=rospy.ServiceProxy('show_lrec', Empty)
         self.init_recognition()
         self.rec_local=True
         self.recognition_time=time.time()-100000
         self.time_without_detection=60
-        self.disp_action_pub=rospy.Publisher('disp/action', disp_action,queue_size=100)
 
 
     def init_recognition(self):
@@ -65,8 +63,10 @@ class recognition_node(object):
                 print("processing data..")
                 if (time.time()-self.recognition_time<self.time_without_detection):
                     self.rec_local=False
+                    self.lrec()
                 else:
                     self.rec_local=True
+                    self.grec()
                 if (self.rec_local):
                     self.inc_proc()
                     hot_word_res=recognizer.recognize_sphinx(audio, keyword_entries=[(self.hot_word, 1)])
@@ -74,9 +74,6 @@ class recognition_node(object):
                     print("local recognition")
                 else:
                     hot_word_res=self.hot_word
-                    msg=disp_action()
-                    msg.type=disp_action.PROCESSING
-                    self.disp_action_pub.publish(msg)
                 if any(self.hot_word in s for s in hot_word_res.split()):
                     try:
                         result = recognizer.recognize_google(audio)
@@ -85,15 +82,12 @@ class recognition_node(object):
                         message.confidence=1
                         message.interface_id=1
                         self.pub.publish(message)
-                        self.stop_disp()
                         rospy.loginfo(result)
                         if any(self.hot_word in u for u in message.text.split()):
                             self.recognition_time=time.time()
                     except sr.UnknownValueError:
-                        self.stop_disp()
                         print("Google Speech Recognition could not understand audio")
                     except sr.RequestError as e:
-                        self.stop_disp()
                         print("Could not request results from Google Speech Recognition service; {0}".format(e))
 
             except sr.UnknownValueError:
