@@ -65,10 +65,10 @@ class recognition_node(object):
 
                 if (time.time()-self.recognition_time<self.time_without_detection):
                     self.rec_local=False
-                    self.lrec()
+                    self.grec()
                 else:
                     self.rec_local=True
-                    self.grec()
+                    self.lrec()
                 if (self.rec_local):
                     hot_word_res=recognizer.recognize_sphinx(audio, keyword_entries=[(self.hot_word, 1)])
                     print("local recognition")
