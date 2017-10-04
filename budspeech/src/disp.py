@@ -39,8 +39,8 @@ class display_node(object):
         s_dis = rospy.Service('stop_disp', Empty, self.stop_disp)
         i_proc = rospy.Service('inc_proc', Empty, self.increase_processing_count)
         dec_proc = rospy.Service('dec_proc', Empty, self.decrease_processing_count)
-        show_grec = rospy.Service('show_grec', Empty, self.show_grec)
-        show_lrec = rospy.Service('show_lrec', Empty, self.show_lrec)
+        grec = rospy.Service('show_grec', Empty, self.show_grec)
+        lrec = rospy.Service('show_lrec', Empty, self.show_lrec)
 
         self.display_anim=False
 
@@ -49,7 +49,7 @@ class display_node(object):
         return []
 
     def show_grec(self,state):
-        self.show_grec=True
+        self.show_lrec=True
         return []
 
 
