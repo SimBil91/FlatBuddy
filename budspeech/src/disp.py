@@ -28,7 +28,7 @@ class display_node(object):
         self.shift_counter=0
         self.peak_counter=3
         self.processing_count=0
-        self.show_grec=True
+        self.show_grec_bool=True
         print("Created device")
         # Init Subscribers
         rospy.Subscriber("disp/text", String, self.show_text_message)
@@ -74,7 +74,7 @@ class display_node(object):
         if not self.display_anim:
             with canvas(self.device) as draw:
                 for i in range(0,self.processing_count):
-                    if self.show_grec:
+                    if self.show_grec_bool:
                         draw.point((7,7-i), fill="white")
                     else:
                         draw.point((0,i), fill="white")
