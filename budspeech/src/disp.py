@@ -48,11 +48,15 @@ class display_node(object):
         self.display_anim=False
         return []
 
-    def show_grec(self):
+    def show_grec(self,state):
         self.show_grec=True
+        return []
 
-    def show_lrec(self):
+
+    def show_lrec(self,state):
         self.show_lrec=False
+        return []
+
 
     def decrease_processing_count(self,state):
         self.processing_count=self.processing_count-1
