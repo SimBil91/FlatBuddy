@@ -19,7 +19,7 @@ import math
 import random
 
 class display_node(object):
-    
+
     def __init__(self):
         rospy.init_node('display')
         self.rate=100
@@ -27,6 +27,7 @@ class display_node(object):
         self.device = max7219(self.serial, cascaded=1, block_orientation=0)
         self.shift_counter=0
         self.peak_counter=3
+        self.processing_count=0
         print("Created device")
         # Init Subscribers
         rospy.Subscriber("disp/text", String, self.show_text_message)
@@ -35,11 +36,27 @@ class display_node(object):
 
         # Init services
         s_dis = rospy.Service('stop_disp', Empty, self.stop_disp)
+        s_dis = rospy.Service('inc_proc', Empty, self.increase_processing_count)
+        s_dis = rospy.Service('dec_proc', Empty, self.decrease_processing_count)
+
         self.display_anim=False
 
     def stop_disp(self,state):
         self.display_anim=False
         return []
+
+    def decrease_processing_count(self):
+        self.processing_count=self.processing_count-1
+
+
+
+    def increase_processing_count(self):
+        self.processing_count=self.processing_count+1
+
+    def draw_processing_count(self):
+        if not self.display_anim:
+            for i in range(0,self.processing_count):
+                draw.point((0,i), fill="white")
 
     def show_text_message(self,data):
          msg = data.data
@@ -89,7 +106,7 @@ class display_node(object):
                         self.device.contrast(int(round(255*(math.sin(self.shift_counter%6/5.0*2*math.pi)+1))/2))
                         rospy.sleep(0.12*(math.sin(self.shift_counter%6/5.0*2*math.pi)+1)/2+0.10)
             self.disable_disp()
-                       
+
     def disable_disp(self):
         self.device.contrast(255)
         with canvas(self.device) as draw:
@@ -116,9 +133,9 @@ class display_node(object):
                 text(draw, (0, 0), chr(1), fill="white")
         rospy.sleep(data.duration)
         self.disable_disp()
-                
+
     def spin(self):
-        r = rospy.Rate(self.rate) 
+        r = rospy.Rate(self.rate)
         while not rospy.is_shutdown():
             r.sleep()
 
