@@ -60,7 +60,8 @@ class display_node(object):
     def draw_processing_count(self):
         if not self.display_anim:
             for i in range(0,self.processing_count):
-                draw.point((0,i), fill="white")
+                with canvas(self.device) as draw:
+                    draw.point((0,i), fill="white")
 
     def show_text_message(self,data):
          msg = data.data
